@@ -39,13 +39,15 @@ We built Bisheshoggo AI—a comprehensive healthcare platform that works even wh
 
 ![Telemedicine](public/tel.png)
 
-Meet Dr. Tanvir, your AI doctor who never sleeps and never turns away a patient. Through video and voice, patients can consult with an AI-powered doctor that understands Bengali, responds to their concerns in real-time, and provides medical guidance 24/7—all powered by advanced AI technology that feels human, compassionate, and always available.
+Meet Dr. Fariha, your real time talking AI doctor who never sleeps and never turns away a patient. Through voice, patients can consult with an AI-powered doctor that understands Bengali, responds to their concerns in real-time, and provides medical guidance 24/7. You'll feel like you're talking to a human while talking to it.
+
+By the way, I wanted to utilize Azure OpenAI 4o Realtime API here, but had to utilize Groq instead as I didn't have any credits. As a consequence, voice sounds like a robot. Otherwise, it would be perfect. 
 
 ### ii. Find Volunteers
 
 ![Find Volunteers](public/vol.png)
 
-No one should suffer alone in an emergency. Our volunteer network connects patients with nearby healthcare volunteers and community health workers who can provide immediate assistance. Using interactive maps, you can find help within your community, see their contact details, and reach out anytime—because sometimes, a helping hand is just around the corner.
+No one should suffer alone in an emergency. Our volunteer network connects patients with nearby healthcare volunteers and community health workers who can provide immediate assistance. Using interactive maps, you can find help within your community, see their contact details, and reach out anytime—because sometimes, a helping hand is just around the corner. This is available for you in offline. 
 
 ### iii. Offline Doctor
 
@@ -57,6 +59,7 @@ No one should suffer alone in an emergency. Our volunteer network connects patie
 
 This is our answer to the internet connectivity problem. The Offline Doctor is an AI-powered symptom checker that works completely without internet, using local AI models that run on your device. Tell it your symptoms in Bengali, and it will analyze them using advanced medical algorithms, provide a diagnosis, suggest home remedies with ingredients available in rural Bangladesh, and tell you when to seek immediate medical attention. It's like having a doctor in your pocket—one that doesn't need Wi-Fi to care about you.
 
+I used Llama here for offline support but unfortuntely, there is a bug which I couldn't fix due to shortage of time. 
 ### iv. Scan Prescription
 
 ![Scan Prescription 1](public/prep1.png)
@@ -67,7 +70,7 @@ This is our answer to the internet connectivity problem. The Offline Doctor is a
 
 ![Scan Prescription 4](public/prep4.png)
 
-Confused about your prescription? Can't remember how long to take your medicines? Simply take a photo of your prescription, and our AI will read it for you, extract all the medicine names, dosages, and instructions. It will then ask you about your current symptoms, how long you've been taking the medicines, and provide personalized recommendations on whether to continue, stop, or consult a doctor—all in Bengali, all tailored to your situation.
+You went to a doctor a month ago and you are now sick again and aren't sure whether you should eat those medicine or not or you're confused about your prescription? Can't remember how long to take your medicines? Simply take a photo of your prescription, and our AI will read it for you, extract all the medicine names, dosages, and instructions. It will then ask you about your current symptoms, how long you've been taking the medicines, and provide personalized recommendations on whether to continue, stop, or consult a doctor—all in Bengali, all tailored to your situation.
 
 ### v. Emergency SOS
 
