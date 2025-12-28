@@ -26,7 +26,7 @@ export default function SignUpSuccessPage() {
             <CardContent className="text-center space-y-4">
               <p className="text-sm text-muted-foreground">
                 Please check your email and click the confirmation link to activate your account. Once confirmed, you
-                can sign in and start using MediConnect.
+                can sign in and start using BisheshoggoAI.
               </p>
               <Button asChild className="w-full">
                 <Link href="/auth/login">Go to Sign In</Link>

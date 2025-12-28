@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/api/auth-context";
 import { DashboardContent } from "@/components/dashboard/dashboard-content";
-import { symptomCheckApi, consultationsApi, medicalRecordsApi } from "@/lib/api/client";
+import { symptomCheckApi, consultationsApi } from "@/lib/api/client";
 
 export default function DashboardPage() {
   const { user, isLoading, isAuthenticated } = useAuth();
@@ -30,15 +30,14 @@ export default function DashboardPage() {
       setLoading(true);
       
       // Load data in parallel
-      const [symptomChecks, consultations, records] = await Promise.all([
+      const [symptomChecks, consultations] = await Promise.all([
         symptomCheckApi.getAll().catch(() => ({ data: [] })),
         consultationsApi.getAll().catch(() => ({ data: [] })),
-        medicalRecordsApi.getAll().catch(() => ({ data: [] })),
       ]);
 
       setRecentSymptomChecks(symptomChecks.data.slice(0, 3));
       setUpcomingConsultations(consultations.data.slice(0, 3));
-      setRecordsCount(records.data.length);
+      setRecordsCount(0);
     } catch (error) {
       console.error("Failed to load dashboard data:", error);
     } finally {

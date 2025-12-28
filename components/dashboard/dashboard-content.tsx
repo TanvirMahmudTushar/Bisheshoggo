@@ -23,7 +23,7 @@ import {
 } from "lucide-react"
 import Link from "next/link"
 import { motion } from "framer-motion"
-import { supabase } from "@/lib/supabase/client"
+import Image from "next/image"
 import { useRouter } from "next/navigation"
 import { useState } from "react"
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
@@ -50,10 +50,17 @@ export function DashboardContent({
   const [isLoading, setIsLoading] = useState(false)
 
   const handleSignOut = async () => {
-    if (!supabase) return
     setIsLoading(true)
-    await supabase.auth.signOut()
-    router.push("/")
+    try {
+      // Clear token from localStorage
+      localStorage.removeItem('bisheshoggo_token')
+      // Redirect to login
+      router.push("/auth/login")
+    } catch (error) {
+      console.error("Logout error:", error)
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   const quickActions = [
@@ -120,12 +127,6 @@ export function DashboardContent({
       icon: Video,
       color: "text-purple-500",
     },
-    {
-      label: "Medical Records",
-      value: recordsCount,
-      icon: FileText,
-      color: "text-blue-500",
-    },
   ]
 
   const NavItems = () => (
@@ -179,13 +180,6 @@ export function DashboardContent({
         <Video className="w-5 h-5" />
         <span>Telemedicine</span>
       </Link>
-      <Link
-        href="/dashboard/records"
-        className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-muted transition-colors"
-      >
-        <FileText className="w-5 h-5" />
-        <span>Medical Records</span>
-      </Link>
       <Link href="/history" className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-muted transition-colors">
         <Activity className="w-5 h-5" />
         <span>Case History</span>
@@ -220,11 +214,9 @@ export function DashboardContent({
       <aside className="hidden lg:flex w-64 flex-col border-r bg-card">
         <div className="p-6 border-b">
           <Link href="/dashboard" className="flex items-center gap-2">
-            <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-primary/10">
-              <Heart className="w-6 h-6 text-primary" />
-            </div>
+            <Image src="/logo.png" alt="Bisheshoggo AI" width={40} height={40} className="rounded-xl" />
             <div>
-              <h1 className="text-lg font-bold">MediConnect</h1>
+              <h1 className="text-lg font-bold">Bisheshoggo AI</h1>
               <p className="text-xs text-muted-foreground">Healthcare Portal</p>
             </div>
           </Link>
@@ -271,11 +263,9 @@ export function DashboardContent({
               <SheetContent side="left" className="w-64 p-0">
                 <div className="p-6 border-b">
                   <div className="flex items-center gap-2">
-                    <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-primary/10">
-                      <Heart className="w-6 h-6 text-primary" />
-                    </div>
+                    <Image src="/logo.png" alt="Bisheshoggo AI" width={40} height={40} className="rounded-xl" />
                     <div>
-                      <h1 className="text-lg font-bold">MediConnect</h1>
+                      <h1 className="text-lg font-bold">Bisheshoggo AI</h1>
                       <p className="text-xs text-muted-foreground">Healthcare Portal</p>
                     </div>
                   </div>
