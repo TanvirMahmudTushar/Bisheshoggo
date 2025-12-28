@@ -98,9 +98,9 @@ export function DashboardContent({
     },
     {
       icon: MapPin,
-      title: "Find Healthcare",
-      description: "Locate nearby facilities",
-      href: "/dashboard/facilities",
+      title: "Find Volunteers",
+      description: "Connect with volunteer doctors",
+      href: "/dashboard/volunteers",
       color: "text-blue-500",
       bgColor: "bg-blue-500/10",
     },
@@ -167,11 +167,11 @@ export function DashboardContent({
         <span>Scan Prescription</span>
       </Link>
       <Link
-        href="/dashboard/facilities"
+        href="/dashboard/volunteers"
         className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-muted transition-colors"
       >
         <MapPin className="w-5 h-5" />
-        <span>Find Healthcare</span>
+        <span>Find Volunteers</span>
       </Link>
       <Link
         href="/dashboard/consultations"
@@ -185,25 +185,11 @@ export function DashboardContent({
         <span>Case History</span>
       </Link>
       <Link
-        href="/knowledge-base"
-        className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-muted transition-colors"
-      >
-        <FileText className="w-5 h-5" />
-        <span>Knowledge Base</span>
-      </Link>
-      <Link
         href="/chw-dashboard"
         className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-muted transition-colors"
       >
         <User className="w-5 h-5" />
         <span>CHW Dashboard</span>
-      </Link>
-      <Link
-        href="/sync-status"
-        className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-muted transition-colors"
-      >
-        <Settings className="w-5 h-5" />
-        <span>Sync Status</span>
       </Link>
     </>
   )

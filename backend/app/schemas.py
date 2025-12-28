@@ -340,6 +340,7 @@ class OCRResponse(BaseModel):
     date: Optional[str] = None
     diagnosis: Optional[str] = None
     medicines: List[OCRMedicine]
+    instructions: Optional[str] = None
     rawText: str
 
 

@@ -38,33 +38,57 @@ export function PrescriptionScannerContent() {
     const medicines: ExtractedData["medicines"] = []
     const lines = text.split("\n")
 
-    const medicinePattern = /(?:tab|cap|syp|inj)\.?\s+([a-z0-9\s]+?)(?:\s+(\d+(?:\.\d+)?\s*(?:mg|ml|g)))?/gi
+    // Enhanced patterns to catch more medicine formats
+    const medicinePatterns = [
+      /medicine[s]?[\s:]+([a-z0-9\s]+?)(?:\n|$)/gi,  // "Medicine: Napa Extra"
+      /(?:tab|cap|syp|inj)\.?\s+([a-z0-9\s]+?)(?:\s+(\d+(?:\.\d+)?\s*(?:mg|ml|g)))?/gi,  // "Tab Napa 500mg"
+      /^\d+[.)]\s+([a-z0-9\s]+?)(?:\s+(\d+(?:\.\d+)?\s*(?:mg|ml|g)))?/gim,  // "1. Napa 500mg"
+      /^(?:rx|R[xX])[:\s]+([a-z0-9\s]+?)(?:\s+(\d+(?:\.\d+)?\s*(?:mg|ml|g)))?/gim,  // "Rx: Napa"
+    ]
+    
     const dosagePattern = /(\d+\+\d+\+\d+|\d+\s*(?:times?|x)\s*(?:daily|day|per day))/gi
 
     let currentMedicine: Partial<(typeof medicines)[0]> | null = null
 
     for (let i = 0; i < lines.length; i++) {
       const line = lines[i].trim()
-      if (!line) continue
+      if (!line || line.length < 3) continue
 
-      const medMatch = line.match(medicinePattern)
-      if (medMatch) {
-        if (currentMedicine?.name) {
-          medicines.push(currentMedicine as (typeof medicines)[0])
-        }
-        currentMedicine = {
-          name: medMatch[0].trim(),
-          dosage: "",
-          frequency: "",
-          duration: "",
+      // Try each pattern
+      for (const pattern of medicinePatterns) {
+        pattern.lastIndex = 0 // Reset regex
+        const medMatch = line.match(pattern)
+        if (medMatch) {
+          if (currentMedicine?.name) {
+            medicines.push(currentMedicine as (typeof medicines)[0])
+          }
+          
+          let medicineName = medMatch[0]
+            .replace(/^(?:medicine[s]?|tab|cap|syp|inj|rx|R[xX])[\s:.]+/i, '')
+            .replace(/^\d+[.)]\s+/, '')
+            .trim()
+          
+          // Extract dosage from name if present
+          const dosageMatch = medicineName.match(/(\d+(?:\.\d+)?\s*(?:mg|ml|g))/i)
+          const dosageStr = dosageMatch ? dosageMatch[0] : ""
+          
+          currentMedicine = {
+            name: medicineName,
+            dosage: dosageStr,
+            frequency: "",
+            duration: "",
+          }
+          break
         }
       }
 
+      // Extract frequency
       const freqMatch = line.match(dosagePattern)
       if (freqMatch && currentMedicine) {
         currentMedicine.frequency = freqMatch[0]
       }
 
+      // Extract duration
       const durationMatch = line.match(/(?:for\s+)?(\d+\s*(?:days?|weeks?|months?))/i)
       if (durationMatch && currentMedicine) {
         currentMedicine.duration = durationMatch[1]
@@ -75,11 +99,32 @@ export function PrescriptionScannerContent() {
       medicines.push(currentMedicine as (typeof medicines)[0])
     }
 
+    // Fallback: if still no medicines, try to extract any meaningful words after keywords
     if (medicines.length === 0) {
+      const medicineKeywords = ['medicine', 'tablet', 'capsule', 'syrup', 'injection', 'rx', 'medication']
       for (const line of lines) {
+        const lowerLine = line.toLowerCase()
+        for (const keyword of medicineKeywords) {
+          if (lowerLine.includes(keyword)) {
+            const parts = line.split(/[:\-]/);
+            if (parts.length > 1) {
+              const medName = parts[1].trim()
+              if (medName.length > 2) {
+                medicines.push({
+                  name: medName,
+                  dosage: "",
+                  frequency: "",
+                  duration: "",
+                })
+              }
+            }
+          }
+        }
+        
+        // Also check for numbered/bulleted lists
         if (/^\d+[.)]\s+/i.test(line) || /^[•\-*]\s+/i.test(line)) {
           const medName = line.replace(/^\d+[.)]\s+|^[•\-*]\s+/, "").trim()
-          if (medName.length > 3) {
+          if (medName.length > 3 && !medicines.some(m => m.name === medName)) {
             medicines.push({
               name: medName,
               dosage: "",

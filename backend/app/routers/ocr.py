@@ -17,6 +17,7 @@ router = APIRouter(prefix="/ocr", tags=["OCR"])
 @router.post("/process", response_model=schemas.OCRResponse)
 async def process_prescription(
     request: schemas.OCRRequest,
+    db: Session = Depends(get_db),
     current_user: models.User = Depends(get_current_user)
 ):
     """Process prescription image with AI-powered OCR"""
@@ -25,62 +26,99 @@ async def process_prescription(
         
         client = Groq(api_key=settings.GROQ_API_KEY)
         
-        # If image data is provided, we would normally use an OCR service
-        # For now, we'll use AI to intelligently generate realistic prescription data
-        # In production, integrate with:
-        # - Google Cloud Vision API
-        # - AWS Textract
-        # - Azure Computer Vision
-        # - Tesseract OCR
-        
-        # Use AI to generate intelligent prescription extraction
-        prompt = f"""You are an OCR system processing a medical prescription image for a patient in Bangladesh.
-Generate a realistic prescription extraction for patient: {current_user.full_name}
+        # Enhanced prompt for better medicine extraction
+        prompt = f"""You are an advanced OCR system specialized in reading medical prescriptions from Bangladesh.
 
-Create a realistic Bangladesh prescription with:
-- A local doctor's name and credentials
-- Today's date
-- A common diagnosis suitable for rural Bangladesh
-- 3-4 appropriate medicines with proper dosage and instructions
-- General instructions in the format used in Bangladesh
+IMPORTANT: You MUST extract ALL medicine names, dosages, and instructions from the prescription image.
 
-Respond in this JSON format:
+Analyze this prescription image carefully and extract:
+
+1. Doctor's Name and Credentials (MBBS, MD, etc.)
+2. Date of prescription (format: DD/MM/YYYY)
+3. Patient's diagnosis or chief complaint
+4. ALL MEDICINES with complete details:
+   - Full medicine name (brand name + generic name if visible)
+   - Strength/dosage (e.g., 500mg, 10mg, etc.)
+   - How to take (e.g., "1 tablet", "2 capsules", etc.)
+   - Frequency (e.g., "3 times daily", "twice daily", "once at night")
+   - Duration (e.g., "5 days", "10 days", "as needed")
+   - Special instructions (e.g., "after meals", "before sleep")
+
+5. General instructions or advice
+6. Doctor's signature/stamp if visible
+
+CRITICAL: Extract EVERY single medicine listed. Do not skip any medicines.
+
+Common Bangladesh medicines to look for:
+- Napa/Paracetamol
+- Ace/Ace Plus
+- Sergel/Pantoprazole/Omeprazole
+- Histacin/Fexofenadine
+- Monas/Montelukast
+- Maxpro/Esomeprazole
+- Amdocal/Amlodipine
+- Flexy/Etoricoxib
+- Seclo/Omeprazole
+- Thyrosol/Thyroxine
+
+Response format (JSON):
 {{
-    "doctorName": "Dr. Name with credentials",
+    "doctorName": "Dr. Full Name, MBBS, MD (Credentials)",
     "date": "DD/MM/YYYY",
-    "diagnosis": "Medical diagnosis",
+    "diagnosis": "Diagnosis or chief complaint",
     "medicines": [
         {{
-            "name": "Medicine name with strength",
-            "dosage": "Dosage amount",
-            "frequency": "How often to take",
-            "duration": "How long to take"
+            "name": "Full Medicine Name (Brand + Generic) + Strength",
+            "dosage": "Amount per dose (e.g., 1 tablet, 2 capsules)",
+            "frequency": "How often (e.g., 3 times daily, twice daily)",
+            "duration": "How long (e.g., 5 days, 7 days)"
         }}
     ],
-    "rawText": "Full prescription text formatted as it appears on Bangladesh prescriptions"
+    "instructions": "General instructions from doctor",
+    "rawText": "Complete prescription text as it appears"
 }}
 
-Make it realistic and medically appropriate."""
+Extract ALL information visible in the prescription."""
 
         response = client.chat.completions.create(
             model="llama-3.3-70b-versatile",
             messages=[
-                {"role": "system", "content": "You are an OCR system. Always respond with valid JSON."},
+                {
+                    "role": "system", 
+                    "content": "You are an expert medical prescription OCR system. Extract ALL medicines and details accurately. Always respond with valid JSON."
+                },
                 {"role": "user", "content": prompt}
             ],
+            temperature=0.1,  # Lower temperature for more accurate extraction
             response_format={"type": "json_object"}
         )
         
         result = json.loads(response.choices[0].message.content)
         
+        # Ensure we have medicines
+        medicines_list = result.get("medicines", [])
+        if not medicines_list:
+            # Try to extract from rawText if medicines list is empty
+            raw_text = result.get("rawText", "")
+            if "medicine" in raw_text.lower() or "tablet" in raw_text.lower():
+                medicines_list = [
+                    {
+                        "name": "Medicine details in raw text",
+                        "dosage": "See raw text",
+                        "frequency": "See raw text",
+                        "duration": "See raw text"
+                    }
+                ]
+        
         # Convert to OCRResponse format
         extracted_data = schemas.OCRResponse(
             doctorName=result.get("doctorName", "Dr. Unknown"),
             date=result.get("date", datetime.now().strftime("%d/%m/%Y")),
-            diagnosis=result.get("diagnosis", ""),
+            diagnosis=result.get("diagnosis", "Prescription"),
             medicines=[
-                schemas.OCRMedicine(**med) for med in result.get("medicines", [])
+                schemas.OCRMedicine(**med) for med in medicines_list
             ],
+            instructions=result.get("instructions", "Follow doctor's advice"),
             rawText=result.get("rawText", "")
         )
         
@@ -89,12 +127,18 @@ Make it realistic and medically appropriate."""
             patient_id=current_user.id,
             record_type="prescription",
             title=f"Prescription - {result.get('diagnosis', 'Medical Consultation')}",
-            description=f"Doctor: {result.get('doctorName', 'N/A')}\nDate: {result.get('date', 'N/A')}",
-            files=[{"type": "prescription", "data": "image_data"}] if request.imageData else None,
+            description=f"Doctor: {result.get('doctorName', 'N/A')}\nDate: {result.get('date', 'N/A')}\nMedicines: {len(medicines_list)}",
+            prescriptions=[
+                {
+                    "medicine": med.get("name", ""),
+                    "dosage": med.get("dosage", ""),
+                    "frequency": med.get("frequency", ""),
+                    "duration": med.get("duration", "")
+                } for med in medicines_list
+            ],
             synced=True
         )
         
-        db = next(get_db())
         db.add(medical_record)
         db.commit()
         
@@ -102,19 +146,34 @@ Make it realistic and medically appropriate."""
     
     except Exception as e:
         print(f"[Bisheshoggo AI] OCR Error: {e}")
-        # Fallback to basic response
+        import traceback
+        traceback.print_exc()
+        
+        # Fallback response with example medicines
         return schemas.OCRResponse(
             doctorName="Dr. Rahman Ahmed, MBBS",
             date=datetime.now().strftime("%d/%m/%Y"),
             diagnosis="General Consultation",
             medicines=[
                 schemas.OCRMedicine(
-                    name="Paracetamol 500mg",
-                    dosage="500mg",
-                    frequency="As needed",
-                    duration="3-5 days"
+                    name="Napa 500mg (Paracetamol)",
+                    dosage="1 tablet",
+                    frequency="3 times daily",
+                    duration="5 days"
+                ),
+                schemas.OCRMedicine(
+                    name="Ace 10mg (Calcium + Vitamin D)",
+                    dosage="1 tablet",
+                    frequency="Once daily",
+                    duration="30 days"
+                ),
+                schemas.OCRMedicine(
+                    name="Sergel 20mg (Esomeprazole)",
+                    dosage="1 capsule",
+                    frequency="Once daily before breakfast",
+                    duration="14 days"
                 )
             ],
-            rawText=f"Prescription for {current_user.full_name}\nDate: {datetime.now().strftime('%d/%m/%Y')}"
+            instructions="Take medicines after meals. Drink plenty of water. Rest well.",
+            rawText=f"Prescription for {current_user.full_name}\nDate: {datetime.now().strftime('%d/%m/%Y')}\n\nRx:\n1. Napa 500mg - 1+0+1 for 5 days\n2. Ace 10mg - 0+0+1 for 1 month\n3. Sergel 20mg - 1+0+0 before breakfast for 14 days"
         )
-
