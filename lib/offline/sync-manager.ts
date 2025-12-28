@@ -24,14 +24,14 @@ class SyncManager {
   }
 
   private handleOnline() {
-    console.log("[v0] Device is online, initiating sync")
+    console.log("[ ] Device is online, initiating sync")
     this.isOnline = true
     this.notifyListeners()
     this.syncNow()
   }
 
   private handleOffline() {
-    console.log("[v0] Device is offline")
+    console.log("[ ] Device is offline")
     this.isOnline = false
     this.notifyListeners()
   }
@@ -69,14 +69,14 @@ class SyncManager {
 
     try {
       const unsyncedItems = offlineStorage.getUnsyncedItems()
-      console.log(`[v0] Syncing ${unsyncedItems.length} items`)
+      console.log(`[ ] Syncing ${unsyncedItems.length} items`)
 
       for (const item of unsyncedItems) {
         try {
           await this.syncItem(item.key, item.data)
           offlineStorage.markAsSynced(item.key)
         } catch (error) {
-          console.error(`[v0] Failed to sync item ${item.key}:`, error)
+          console.error(`[ ] Failed to sync item ${item.key}:`, error)
         }
       }
 
@@ -90,7 +90,7 @@ class SyncManager {
   private async syncItem(key: string, data: any): Promise<void> {
     if (!data.type) return
 
-    console.log(`[v0] Syncing ${data.type}:`, key)
+    console.log(`[ ] Syncing ${data.type}:`, key)
 
     try {
       if (data.type === "symptom_check") {
@@ -119,9 +119,9 @@ class SyncManager {
         if (!response.ok) throw new Error("Failed to sync consultation")
       }
 
-      console.log(`[v0] Successfully synced ${data.type}`)
+      console.log(`[ ] Successfully synced ${data.type}`)
     } catch (error) {
-      console.error(`[v0] Sync failed for ${key}:`, error)
+      console.error(`[ ] Sync failed for ${key}:`, error)
       throw error
     }
   }

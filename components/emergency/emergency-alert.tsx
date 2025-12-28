@@ -54,7 +54,7 @@ export function EmergencyAlert({ language }: EmergencyAlertProps) {
           setGettingLocation(false)
         },
         (error) => {
-          console.error("[v0] Error getting location:", error)
+          console.error("[ ] Error getting location:", error)
           setGettingLocation(false)
           alert(language === "en" ? "Could not get location" : "অবস্থান পেতে পারিনি")
         },
@@ -97,11 +97,11 @@ export function EmergencyAlert({ language }: EmergencyAlertProps) {
       })
 
       if (response.ok) {
-        console.log("[v0] Emergency alert saved to database")
+        console.log("[ ] Emergency alert saved to database")
         offlineStorage.markAsSynced(`emergency_${emergencyLog.id}`)
       }
     } catch (error) {
-      console.log("[v0] Offline - emergency will sync when online:", error)
+      console.log("[ ] Offline - emergency will sync when online:", error)
       // Mark for syncing later
       offlineStorage.set(`pending_emergency_${emergencyLog.id}`, {
         type: "emergency",

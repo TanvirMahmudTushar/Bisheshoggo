@@ -53,7 +53,7 @@ export class VoiceSpeechRecognition {
     }
 
     this.recognition.onerror = (event: any) => {
-      console.error("[v0] Speech recognition error:", event.error)
+      console.error("[ ] Speech recognition error:", event.error)
       this.isListening = false
       if (onError) {
         onError(event.error)
@@ -68,7 +68,7 @@ export class VoiceSpeechRecognition {
       this.recognition.start()
       this.isListening = true
     } catch (error) {
-      console.error("[v0] Error starting speech recognition:", error)
+      console.error("[ ] Error starting speech recognition:", error)
       this.isListening = false
     }
   }

@@ -91,9 +91,9 @@ export default function CHWDashboardPage() {
         })
       }
 
-      console.log("[v0] Loaded cases from database:", cases.length)
+      console.log("[ ] Loaded cases from database:", cases.length)
     } catch (error) {
-      console.log("[v0] Database fetch failed, loading from offline storage:", error)
+      console.log("[ ] Database fetch failed, loading from offline storage:", error)
     }
 
     const symptomChecks = offlineStorage.getAll("symptom_check_")

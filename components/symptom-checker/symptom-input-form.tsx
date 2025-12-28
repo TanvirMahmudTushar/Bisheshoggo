@@ -134,11 +134,11 @@ export function SymptomInputForm({ onResult, language }: SymptomInputFormProps) 
       })
 
       if (response.ok) {
-        console.log("[v0] Symptom check saved to database")
+        console.log("[ ] Symptom check saved to database")
         offlineStorage.markAsSynced(`symptom_check_${caseLog.id}`)
       }
     } catch (error) {
-      console.log("[v0] Offline - will sync when online:", error)
+      console.log("[ ] Offline - will sync when online:", error)
       const diagnosis = language === "en" ? result.recommendation : result.recommendationBn
       const recommendations = language === "en" ? result.advice.join(" | ") : result.adviceBn.join(" | ")
 

@@ -36,7 +36,7 @@ export function MedicineSuggestions({ prescriptions, diagnosis }: MedicineSugges
       const data = await response.json()
       setSuggestions(data)
     } catch (error) {
-      console.error("[v0] Medicine suggestions error:", error)
+      console.error("[ ] Medicine suggestions error:", error)
     } finally {
       setIsLoading(false)
     }

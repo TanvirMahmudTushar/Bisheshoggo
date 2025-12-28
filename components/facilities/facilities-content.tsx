@@ -45,7 +45,7 @@ export function FacilitiesContent({ facilities }: FacilitiesContentProps) {
           })
         },
         (error) => {
-          console.error("[v0] Geolocation error:", error)
+          console.error("[ ] Geolocation error:", error)
         },
       )
     }

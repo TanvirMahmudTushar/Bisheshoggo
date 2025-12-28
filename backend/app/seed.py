@@ -1,102 +1,25 @@
 """
 Bisheshoggo AI - Database Seeder
-Run this to populate the database with sample data
+Run this to populate the database with medical facilities only
 """
 from sqlalchemy.orm import Session
 from .database import SessionLocal, init_db
-from .models import (
-    User, PatientProfile, ProviderProfile, MedicalFacility,
-    UserRole, FacilityType
-)
-from .auth import get_password_hash
+from .models import MedicalFacility, FacilityType
 
 
 def seed_database():
-    """Seed the database with sample data"""
+    """Seed the database with medical facilities only (no demo users)"""
     db = SessionLocal()
     
     try:
         # Check if already seeded
-        if db.query(User).first():
-            print("Database already seeded!")
+        if db.query(MedicalFacility).first():
+            print("[*] Database already seeded!")
             return
         
-        print("🌱 Seeding database...")
+        print("[*] Seeding database with medical facilities...")
         
-        # Create sample users
-        # Admin/Doctor
-        doctor = User(
-            email="doctor@bisheshoggo.ai",
-            hashed_password=get_password_hash("doctor123"),
-            full_name="Dr. Fatima Rahman",
-            phone="+8801712345678",
-            role=UserRole.doctor
-        )
-        db.add(doctor)
-        db.flush()
-        
-        doctor_profile = ProviderProfile(
-            user_id=doctor.id,
-            specialization="General Medicine",
-            license_number="BMDC-12345",
-            qualification="MBBS, MD",
-            years_of_experience=10,
-            consultation_fee=500.00,
-            available_for_telemedicine=True,
-            is_available=True,
-            languages=["Bengali", "English", "Chakma"],
-            bio="Experienced general physician specializing in rural healthcare."
-        )
-        db.add(doctor_profile)
-        
-        # CHW (Community Health Worker)
-        chw = User(
-            email="chw@bisheshoggo.ai",
-            hashed_password=get_password_hash("chw123"),
-            full_name="Abdul Karim",
-            phone="+8801812345679",
-            role=UserRole.community_health_worker
-        )
-        db.add(chw)
-        db.flush()
-        
-        chw_profile = ProviderProfile(
-            user_id=chw.id,
-            specialization="Community Health",
-            qualification="CHW Certificate",
-            years_of_experience=5,
-            available_for_telemedicine=True,
-            is_available=True,
-            languages=["Bengali", "Marma"],
-            bio="Community health worker serving Bandarban district."
-        )
-        db.add(chw_profile)
-        
-        # Patient
-        patient = User(
-            email="patient@bisheshoggo.ai",
-            hashed_password=get_password_hash("patient123"),
-            full_name="Rina Chakma",
-            phone="+8801912345680",
-            role=UserRole.patient
-        )
-        db.add(patient)
-        db.flush()
-        
-        patient_profile = PatientProfile(
-            user_id=patient.id,
-            blood_group="O+",
-            gender="Female",
-            village="Ruma",
-            district="Bandarban",
-            division="Chittagong",
-            medical_conditions=["Asthma"],
-            allergies=["Penicillin"],
-            current_medications=["Salbutamol Inhaler"]
-        )
-        db.add(patient_profile)
-        
-        # Create sample facilities
+        # Create medical facilities
         facilities = [
             MedicalFacility(
                 name="Bandarban Sadar Hospital",
@@ -144,9 +67,9 @@ def seed_database():
                 is_active=True
             ),
             MedicalFacility(
-                name="Hill View Pharmacy",
+                name="Bandarban Pharmacy",
                 facility_type=FacilityType.pharmacy,
-                phone="+880361-62456",
+                phone="+880361-63000",
                 address="Main Road, Bandarban Sadar",
                 district="Bandarban",
                 division="Chittagong",
@@ -187,28 +110,21 @@ def seed_database():
                 has_ambulance=True,
                 has_emergency=True,
                 is_active=True
-            )
+            ),
         ]
         
-        for facility in facilities:
-            db.add(facility)
-        
+        db.add_all(facilities)
         db.commit()
-        print("✅ Database seeded successfully!")
-        print("\n📋 Sample Login Credentials:")
-        print("   Doctor: doctor@bisheshoggo.ai / doctor123")
-        print("   CHW: chw@bisheshoggo.ai / chw123")
-        print("   Patient: patient@bisheshoggo.ai / patient123")
+        
+        print("[+] Database seeded successfully!")
+        print(f"[+] Created {len(facilities)} medical facilities")
+        print("")
+        print("✅ No demo users created")
+        print("📝 Please sign up to create your account")
+        print("")
         
     except Exception as e:
-        print(f"❌ Error seeding database: {e}")
         db.rollback()
-        raise
+        print(f"[-] Error seeding database: {e}")
     finally:
         db.close()
-
-
-if __name__ == "__main__":
-    init_db()
-    seed_database()
-

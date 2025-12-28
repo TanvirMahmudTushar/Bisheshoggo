@@ -91,7 +91,7 @@ export function ConsultationsContent({ userId, userRole, consultations, provider
       // Refresh the page to show new consultation
       window.location.reload()
     } catch (error) {
-      console.error("[v0] Error booking consultation:", error)
+      console.error("[ ] Error booking consultation:", error)
       toast.error("Failed to book consultation. Please try again.")
     } finally {
       setIsLoading(false)
@@ -115,7 +115,7 @@ export function ConsultationsContent({ userId, userRole, consultations, provider
       toast.success("Consultation accepted")
       window.location.reload()
     } catch (error) {
-      console.error("[v0] Error accepting consultation:", error)
+      console.error("[ ] Error accepting consultation:", error)
       toast.error("Failed to accept consultation")
     } finally {
       setIsLoading(false)
@@ -136,7 +136,7 @@ export function ConsultationsContent({ userId, userRole, consultations, provider
       toast.success("Consultation cancelled")
       window.location.reload()
     } catch (error) {
-      console.error("[v0] Error cancelling consultation:", error)
+      console.error("[ ] Error cancelling consultation:", error)
       toast.error("Failed to cancel consultation")
     } finally {
       setIsLoading(false)

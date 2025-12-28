@@ -42,7 +42,7 @@ export function VoiceInputButton({ onTranscript, language = "en", disabled = fal
           }
         },
         (error) => {
-          console.error("[v0] Voice recognition error:", error)
+          console.error("[ ] Voice recognition error:", error)
           setIsListening(false)
         },
       )

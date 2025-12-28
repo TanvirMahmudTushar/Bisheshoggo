@@ -1,18 +1,28 @@
 import type React from "react"
 import type { Metadata } from "next"
-import { Geist, Geist_Mono } from "next/font/google"
+import { Space_Grotesk, JetBrains_Mono } from "next/font/google"
 import { Analytics } from "@vercel/analytics/next"
+import { AuthProvider } from "@/lib/api/auth-context"
 import "./globals.css"
 
-const _geist = Geist({ subsets: ["latin"] })
-const _geistMono = Geist_Mono({ subsets: ["latin"] })
+const spaceGrotesk = Space_Grotesk({ 
+  subsets: ["latin"],
+  variable: "--font-sans"
+})
+
+const jetbrainsMono = JetBrains_Mono({ 
+  subsets: ["latin"],
+  variable: "--font-mono"
+})
 
 export const metadata: Metadata = {
-  title: "MediConnect - Healthcare for Rural Bangladesh",
+  title: "Bisheshoggo AI - বিশেষজ্ঞ AI Healthcare Platform",
   description:
-    "Medical support platform for Bangladesh's Hill Tracts and rural regions. Access telemedicine, symptom checker, emergency SOS, and find nearby healthcare facilities.",
-  generator: "v0.app",
+    "AI-powered medical support platform for Bangladesh's Hill Tracts and rural regions. Access telemedicine, symptom checker, emergency SOS, and find nearby healthcare facilities.",
+ 
   keywords: [
+    "Bisheshoggo AI",
+    "বিশেষজ্ঞ",
     "telemedicine",
     "rural healthcare",
     "Bangladesh",
@@ -20,6 +30,7 @@ export const metadata: Metadata = {
     "medical support",
     "emergency SOS",
     "symptom checker",
+    "AI healthcare",
   ],
   icons: {
     icon: [
@@ -47,8 +58,10 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className="dark">
-      <body className={`font-sans antialiased`}>
-        {children}
+      <body className={`${spaceGrotesk.variable} ${jetbrainsMono.variable} font-sans antialiased`}>
+        <AuthProvider>
+          {children}
+        </AuthProvider>
         <Analytics />
       </body>
     </html>

@@ -170,7 +170,7 @@ export function SymptomCheckerContent({ userId, symptomHistory }: SymptomChecker
         })
 
         if (error) {
-          console.error("[v0] Error saving symptom check:", error)
+          console.error("[ ] Error saving symptom check:", error)
           // Still show results even if save fails
         } else {
           toast.success("Symptom check saved successfully")
@@ -193,7 +193,7 @@ export function SymptomCheckerContent({ userId, symptomHistory }: SymptomChecker
 
       setStep("results")
     } catch (error) {
-      console.error("[v0] Error in symptom checker:", error)
+      console.error("[ ] Error in symptom checker:", error)
       toast.error("An error occurred. Please try again.")
     } finally {
       setIsLoading(false)

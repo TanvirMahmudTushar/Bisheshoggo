@@ -109,7 +109,7 @@ export function ProfileContent({ user, profile, roleProfile }: ProfileContentPro
       toast.success("Profile updated successfully")
       setIsEditing(false)
     } catch (error) {
-      console.error("[v0] Error updating profile:", error)
+      console.error("[ ] Error updating profile:", error)
       toast.error("Failed to update profile. Please try again.")
     } finally {
       setIsLoading(false)

@@ -177,10 +177,9 @@ class FacilityResponse(FacilityCreate):
 # Symptom Check Schemas
 class SymptomCheckCreate(BaseModel):
     symptoms: str  # Comma-separated string
-    severity: str
+    severity: Optional[str] = None
     duration: Optional[str] = None
-    diagnosis: Optional[str] = None
-    recommendations: Optional[str] = None
+    additional_notes: Optional[str] = None
 
 
 class SymptomCheckResponse(BaseModel):
@@ -190,6 +189,7 @@ class SymptomCheckResponse(BaseModel):
     severity: str
     duration: Optional[str] = None
     additional_notes: Optional[str] = None
+    diagnosis: Optional[str] = None
     suggested_conditions: List[str]
     recommendations: Optional[str] = None
     synced: bool

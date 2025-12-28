@@ -150,6 +150,7 @@ class SymptomCheck(Base):
     severity = Column(String, nullable=False)
     duration = Column(String, nullable=True)
     additional_notes = Column(Text, nullable=True)
+    diagnosis = Column(Text, nullable=True)  # AI-generated diagnosis
     suggested_conditions = Column(JSON, default=list)
     recommendations = Column(Text, nullable=True)
     synced = Column(Boolean, default=True)

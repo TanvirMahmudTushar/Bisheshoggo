@@ -35,7 +35,7 @@ export function AIChatContent() {
 
   useEffect(() => {
     if (error) {
-      console.error("[v0] AI Chat Error:", error)
+      console.error("[ ] AI Chat Error:", error)
     }
   }, [error])
 
@@ -95,10 +95,12 @@ export function AIChatContent() {
     setError(null)
 
     try {
-      const response = await fetch("/api/chat", {
+      // Use the FastAPI backend for AI chat
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api'}/ai/chat/simple`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          "Authorization": `Bearer ${localStorage.getItem('bisheshoggo_token') || ''}`,
         },
         body: JSON.stringify({
           messages: [...messages, userMessage].map((m) => ({
@@ -112,36 +114,17 @@ export function AIChatContent() {
         throw new Error("Failed to get response from AI")
       }
 
-      const reader = response.body?.getReader()
-      const decoder = new TextDecoder()
-      let assistantMessage = ""
-
-      if (reader) {
-        while (true) {
-          const { done, value } = await reader.read()
-          if (done) break
-
-          const chunk = decoder.decode(value)
-          const lines = chunk.split("\n")
-
-          for (const line of lines) {
-            if (line.startsWith("0:")) {
-              const content = line.slice(2).replace(/^"(.*)"$/, "$1")
-              assistantMessage += content
-            }
-          }
-        }
-      }
+      const data = await response.json()
 
       const assistantMsg: Message = {
         id: (Date.now() + 1).toString(),
         role: "assistant",
-        content: assistantMessage || "I apologize, but I couldn't generate a response. Please try again.",
+        content: data.content || "I apologize, but I couldn't generate a response. Please try again.",
       }
 
       setMessages((prev) => [...prev, assistantMsg])
     } catch (err) {
-      console.error("[v0] Chat error:", err)
+      console.error("[ ] Chat error:", err)
       setError(err instanceof Error ? err.message : "Failed to send message")
     } finally {
       setIsLoading(false)

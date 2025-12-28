@@ -54,7 +54,7 @@ export function EmergencyContent({ userId, profile, patientProfile, activeEmerge
             })
         },
         (error) => {
-          console.error("[v0] Geolocation error:", error)
+          console.error("[ ] Geolocation error:", error)
           toast.error("Unable to get your location. Please enable location services.")
         },
       )
@@ -98,7 +98,7 @@ export function EmergencyContent({ userId, profile, patientProfile, activeEmerge
       setEmergencyType("")
       setDescription("")
     } catch (error) {
-      console.error("[v0] Error sending emergency SOS:", error)
+      console.error("[ ] Error sending emergency SOS:", error)
       toast.error("Failed to send emergency SOS. Please try again or call emergency services directly.")
     } finally {
       setIsLoading(false)

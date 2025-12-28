@@ -30,7 +30,30 @@ async def get_facilities(
     
     facilities = query.order_by(models.MedicalFacility.name).all()
     
-    return {"data": facilities}
+    # Convert to dict for serialization
+    facilities_data = []
+    for facility in facilities:
+        facilities_data.append({
+            "id": facility.id,
+            "name": facility.name,
+            "facility_type": facility.facility_type,
+            "phone": facility.phone,
+            "address": facility.address,
+            "village": facility.village,
+            "district": facility.district,
+            "division": facility.division,
+            "latitude": facility.latitude,
+            "longitude": facility.longitude,
+            "operating_hours": facility.operating_hours,
+            "services_offered": facility.services_offered,
+            "has_ambulance": facility.has_ambulance,
+            "has_emergency": facility.has_emergency,
+            "is_active": facility.is_active,
+            "contact_person": facility.contact_person,
+            "created_at": facility.created_at.isoformat() if facility.created_at else None
+        })
+    
+    return {"data": facilities_data}
 
 
 @router.post("", response_model=dict)

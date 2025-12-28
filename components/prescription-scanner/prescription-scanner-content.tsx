@@ -135,11 +135,11 @@ export function PrescriptionScannerContent() {
           },
         })
 
-        console.log("[v0] Starting OCR recognition...")
+        console.log("[ ] Starting OCR recognition...")
         const {
           data: { text },
         } = await worker.recognize(file)
-        console.log("[v0] OCR completed, extracted text length:", text.length)
+        console.log("[ ] OCR completed, extracted text length:", text.length)
 
         await worker.terminate()
 
@@ -167,7 +167,7 @@ export function PrescriptionScannerContent() {
           description: `Extracted ${medicines.length} medicine(s)`,
         })
       } catch (err) {
-        console.error("[v0] OCR processing error:", err)
+        console.error("[ ] OCR processing error:", err)
         setError("Failed to process prescription. Please try again with a clearer image.")
         toast({
           title: "Processing failed",
@@ -223,7 +223,7 @@ export function PrescriptionScannerContent() {
       setImage(null)
       setExtractedData(null)
     } catch (err) {
-      console.error("[v0] Save prescription error:", err)
+      console.error("[ ] Save prescription error:", err)
       toast({
         title: "Failed to save",
         description: "Please try again",

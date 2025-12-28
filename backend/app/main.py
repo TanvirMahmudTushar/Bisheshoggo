@@ -25,12 +25,12 @@ from .routers import (
 async def lifespan(app: FastAPI):
     """Application lifespan handler"""
     # Startup: Initialize database
-    print("🚀 Starting Bisheshoggo AI Backend...")
+    print("[+] Starting Bisheshoggo AI Backend...")
     init_db()
-    print("✅ Database initialized")
+    print("[+] Database initialized")
     yield
     # Shutdown
-    print("👋 Shutting down Bisheshoggo AI...")
+    print("[*] Shutting down Bisheshoggo AI...")
 
 
 # Create FastAPI application
@@ -57,13 +57,18 @@ app = FastAPI(
     lifespan=lifespan
 )
 
-# Configure CORS
+# Configure CORS - allow all localhost origins for development
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
         settings.FRONTEND_URL,
         "http://localhost:3000",
-        "http://127.0.0.1:3000"
+        "http://localhost:3001",
+        "http://localhost:3002",
+        "http://localhost:3003",
+        "http://127.0.0.1:3000",
+        "http://127.0.0.1:3001",
+        "http://127.0.0.1:3002",
     ],
     allow_credentials=True,
     allow_methods=["*"],

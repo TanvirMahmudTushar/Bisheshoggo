@@ -1,58 +1,71 @@
-import { redirect } from "next/navigation"
-import { createClient } from "@/lib/supabase/server"
-import { DashboardContent } from "@/components/dashboard/dashboard-content"
+"use client";
 
-export default async function DashboardPage() {
-  const supabase = await createClient()
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { useAuth } from "@/lib/api/auth-context";
+import { DashboardContent } from "@/components/dashboard/dashboard-content";
+import { symptomCheckApi, consultationsApi, medicalRecordsApi } from "@/lib/api/client";
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
+export default function DashboardPage() {
+  const { user, isLoading, isAuthenticated } = useAuth();
+  const router = useRouter();
+  const [recentSymptomChecks, setRecentSymptomChecks] = useState([]);
+  const [upcomingConsultations, setUpcomingConsultations] = useState([]);
+  const [recordsCount, setRecordsCount] = useState(0);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (!isLoading && !isAuthenticated) {
+      router.push("/auth/login");
+      return;
+    }
+
+    if (user) {
+      loadDashboardData();
+    }
+  }, [user, isLoading, isAuthenticated, router]);
+
+  const loadDashboardData = async () => {
+    try {
+      setLoading(true);
+      
+      // Load data in parallel
+      const [symptomChecks, consultations, records] = await Promise.all([
+        symptomCheckApi.getAll().catch(() => ({ data: [] })),
+        consultationsApi.getAll().catch(() => ({ data: [] })),
+        medicalRecordsApi.getAll().catch(() => ({ data: [] })),
+      ]);
+
+      setRecentSymptomChecks(symptomChecks.data.slice(0, 3));
+      setUpcomingConsultations(consultations.data.slice(0, 3));
+      setRecordsCount(records.data.length);
+    } catch (error) {
+      console.error("Failed to load dashboard data:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (isLoading || loading) {
+    return (
+      <div className="flex h-screen items-center justify-center">
+        <div className="h-12 w-12 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+      </div>
+    );
+  }
+
   if (!user) {
-    redirect("/auth/login")
+    return null;
   }
-
-  // Fetch user profile
-  const { data: profile } = await supabase.from("profiles").select("*").eq("id", user.id).single()
-
-  // Fetch patient profile if user is a patient
-  let patientProfile = null
-  if (profile?.role === "patient") {
-    const { data } = await supabase.from("patient_profiles").select("*").eq("id", user.id).single()
-    patientProfile = data
-  }
-
-  // Fetch recent symptom checks
-  const { data: recentSymptomChecks } = await supabase
-    .from("symptom_checks")
-    .select("*")
-    .eq("user_id", user.id)
-    .order("created_at", { ascending: false })
-    .limit(3)
-
-  // Fetch upcoming consultations
-  const { data: upcomingConsultations } = await supabase
-    .from("consultations")
-    .select("*, provider:provider_id(full_name, avatar_url)")
-    .eq("patient_id", user.id)
-    .in("status", ["pending", "accepted", "in_progress"])
-    .order("scheduled_at", { ascending: true })
-    .limit(3)
-
-  // Fetch medical records count
-  const { count: recordsCount } = await supabase
-    .from("medical_records")
-    .select("*", { count: "exact", head: true })
-    .eq("patient_id", user.id)
 
   return (
     <DashboardContent
       user={user}
-      profile={profile}
-      patientProfile={patientProfile}
-      recentSymptomChecks={recentSymptomChecks || []}
-      upcomingConsultations={upcomingConsultations || []}
-      recordsCount={recordsCount || 0}
+      profile={null}
+      patientProfile={null}
+      recentSymptomChecks={recentSymptomChecks}
+      upcomingConsultations={upcomingConsultations}
+      recordsCount={recordsCount}
     />
-  )
+  );
 }
