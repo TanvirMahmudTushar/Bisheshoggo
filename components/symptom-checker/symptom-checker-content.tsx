@@ -220,8 +220,11 @@ export function SymptomCheckerContent({ userId, symptomHistory }: SymptomChecker
             </Button>
           </Link>
           <div>
-            <h1 className="text-2xl font-bold">Symptom Checker</h1>
-            <p className="text-muted-foreground">AI-powered health assessment</p>
+            <h1 className="text-2xl font-bold flex items-center gap-2">
+              <span className="text-2xl">🩺</span>
+              Offline Dr
+            </h1>
+            <p className="text-muted-foreground">AI-powered offline medical assistant</p>
           </div>
         </div>
         {step !== "history" && (
@@ -232,16 +235,17 @@ export function SymptomCheckerContent({ userId, symptomHistory }: SymptomChecker
       </div>
 
       {/* Offline Indicator */}
-      {isOffline && (
-        <Card className="border-amber-500/50 bg-amber-500/10">
-          <CardContent className="flex items-center gap-2 py-3">
-            <WifiOff className="w-5 h-5 text-amber-500" />
-            <p className="text-sm">
-              You&apos;re offline. Symptom checker will work, but data will sync when you&apos;re back online.
-            </p>
-          </CardContent>
-        </Card>
-      )}
+      <Card className={isOffline ? "border-amber-500/50 bg-amber-500/10" : "border-green-500/50 bg-green-500/10"}>
+        <CardContent className="flex items-center gap-2 py-3">
+          <WifiOff className={`w-5 h-5 ${isOffline ? 'text-amber-500' : 'text-green-500'}`} />
+          <p className="text-sm">
+            {isOffline 
+              ? "You're offline. Offline Dr works perfectly without internet!"
+              : "✅ Offline Dr - Works 100% offline • No internet required"
+            }
+          </p>
+        </CardContent>
+      </Card>
 
       <AnimatePresence mode="wait">
         {/* Input Form */}
@@ -365,16 +369,16 @@ export function SymptomCheckerContent({ userId, symptomHistory }: SymptomChecker
                   />
                 </div>
 
-                <Button onClick={handleSubmit} disabled={isLoading || selectedSymptoms.length === 0} className="w-full">
+                <Button onClick={handleSubmit} disabled={isLoading || selectedSymptoms.length === 0} className="w-full bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700">
                   {isLoading ? (
                     <>
                       <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                      Analyzing...
+                      Offline Dr is Analyzing...
                     </>
                   ) : (
                     <>
-                      <Stethoscope className="w-4 h-4 mr-2" />
-                      Analyze Symptoms
+                      <span className="mr-2">🩺</span>
+                      Get Offline Diagnosis
                     </>
                   )}
                 </Button>
@@ -520,7 +524,10 @@ export function SymptomCheckerContent({ userId, symptomHistory }: SymptomChecker
           >
             <Card>
               <CardHeader>
-                <CardTitle>Symptom Check History</CardTitle>
+                <CardTitle className="flex items-center gap-2">
+                  <span>📋</span>
+                  Offline Dr History
+                </CardTitle>
                 <CardDescription>Your previous health assessments</CardDescription>
               </CardHeader>
               <CardContent>

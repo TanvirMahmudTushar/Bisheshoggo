@@ -311,6 +311,7 @@ class MedicineSuggestionRequest(BaseModel):
 class MedicineSuggestion(BaseModel):
     medicine: str
     reason: str
+    shouldTake: Optional[str] = None  # "YES - Continue taking" | "NO - Not needed" | "CONSULT - Requires doctor"
     alternatives: List[str]
     precautions: List[str]
     interactions: List[str]

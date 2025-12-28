@@ -27,12 +27,16 @@ export default function CheckSymptomsPage() {
             </Button>
             <div className="flex-1">
               <h1 className="text-2xl md:text-3xl font-bold flex items-center gap-2">
-                <Stethoscope className="w-8 h-8 text-primary" />
-                {language === "en" ? "Check Your Symptoms" : "আপনার লক্ষণ পরীক্ষা করুন"}
+                <span className="text-3xl">🩺</span>
+                {language === "en" ? "Offline Dr" : "অফলাইন ডাক্তার"}
               </h1>
               <p className="text-sm text-muted-foreground">
-                {language === "en" ? "Works offline • Instant risk assessment" : "অফলাইনে কাজ করে • তাত্ক্ষণিক ঝুঁকি মূল্যায়ন"}
+                {language === "en" ? "100% Offline AI Medical Assistant • No Internet Required" : "১০০% অফলাইন AI মেডিকেল সহকারী • ইন্টারনেট প্রয়োজন নেই"}
               </p>
+              <div className="mt-2 inline-flex items-center gap-2 bg-green-100 dark:bg-green-900/30 px-3 py-1 rounded-full text-xs text-green-700 dark:text-green-400">
+                <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
+                {language === "en" ? "Powered by Local LLaMA" : "লোকাল LLaMA দ্বারা চালিত"}
+              </div>
             </div>
             <Button
               variant="outline"
@@ -46,11 +50,14 @@ export default function CheckSymptomsPage() {
           {!result ? (
             <Card>
               <CardHeader>
-                <CardTitle>{language === "en" ? "Describe Your Symptoms" : "আপনার লক্ষণ বর্ণনা করুন"}</CardTitle>
+                <CardTitle className="flex items-center gap-2">
+                  <span>💬</span>
+                  {language === "en" ? "Tell Offline Dr Your Symptoms" : "অফলাইন ডাক্তারকে আপনার লক্ষণ বলুন"}
+                </CardTitle>
                 <CardDescription>
                   {language === "en"
-                    ? "Tell us what you're experiencing so we can provide appropriate guidance"
-                    : "আপনি কী অনুভব করছেন তা আমাদের বলুন যাতে আমরা উপযুক্ত নির্দেশনা দিতে পারি"}
+                    ? "Your local AI doctor will analyze and provide instant recommendations - no internet needed!"
+                    : "আপনার লোকাল AI ডাক্তার বিশ্লেষণ করবেন এবং তাত্ক্ষণিক পরামর্শ দেবেন - ইন্টারনেট দরকার নেই!"}
                 </CardDescription>
               </CardHeader>
               <CardContent>

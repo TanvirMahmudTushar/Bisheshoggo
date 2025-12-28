@@ -1,6 +1,6 @@
-# Bisheshoggo AI - বিশেষজ্ঞ AI Healthcare Platform
+# Bisheshoggo AI 
 
-**Expert Healthcare for Bangladesh's Hill Tracts and Rural Regions**
+**Doctor you need**
 
 ---
 
@@ -40,7 +40,7 @@ For millions living in these regions, healthcare is not a guaranteed right but a
 
 ## 3. Solution Overview
 
-**Bisheshoggo AI** is an AI-powered, offline-first healthcare platform designed specifically for Bangladesh's Hill Tracts and rural regions. It bridges the healthcare gap by providing:
+**Bisheshoggo AI** is always ready to bring treatment to the place where even internet can't reach:
 
 ### Core Features:
 
@@ -100,29 +100,10 @@ For millions living in these regions, healthcare is not a guaranteed right but a
 - Vital signs tracking
 - Auto-generated from AI conversations
 
-### How It Works:
 
 ```
-User → Opens App (Works Offline)
-     ↓
-     → Checks Symptoms (AI Analysis)
-     → Chats with AI Doctor (Voice/Text)
-     → Finds Nearby Facility
-     → Books Telemedicine (Video + Voice)
-     → Scans Prescription (OCR)
-     → Emergency SOS (If Needed)
-     ↓
-All Data Syncs When Internet Available
-```
 
-### Unique Value Propositions:
 
-1. **Truly Offline** - Core features work without internet
-2. **Voice-First** - Speak symptoms, hear advice (no typing needed)
-3. **AI-Powered** - Real medical intelligence, not dummy responses
-4. **Culturally Adapted** - Designed for Hill Tracts communities
-5. **Low Resource** - Works on basic smartphones
-6. **Privacy-First** - Data stored locally, syncs securely
 
 ---
 
@@ -177,236 +158,42 @@ All Data Syncs When Internet Available
 
 ## 5. AI Tools Used
 
-Throughout the development of Bisheshoggo AI, we leveraged multiple AI tools to accelerate development, improve code quality, and enhance user experience:
+Throughout the development of Bisheshoggo AI, we used multiple AI tools to accelerate development, improve code quality, and enhance user experience:
 
 ### **Gemini** (Google AI)
-- Used for: Research on medical AI prompts and healthcare chatbot design
-- Helped with: Understanding medical terminology and diagnosis patterns
+- Used for: Researching the problem
+
 
 ### **ChatGPT** (OpenAI)
-- Used for: Code generation, debugging, and documentation
-- Helped with: FastAPI backend structure and API design
+- Used for: Researching the problem and generating components for UI
+
 
 ### **Claude** (Anthropic)
-- Used for: Complex problem-solving and architecture decisions
-- Helped with: Offline-first architecture design and data synchronization
+- Used for: Generating code
+
 
 ### **Heygen**
 - Used for: Creating the AI doctor video (doctor.mp4)
-- Generated: Realistic doctor avatar with lip-sync capabilities
-- Enhanced: Telemedicine experience with professional video
+
 
 ### **V0** (Vercel)
 - Used for: UI/UX component generation
-- Helped with: Rapid prototyping of dashboard and consultation interfaces
+
 
 ### **Azure OpenAI**
-- Used for: Testing alternative AI models for medical consultation
-- Evaluated: GPT-4 for medical advice accuracy
+- Used for: Testing alternative AI models for medical consultation (Couldn't use it as I crossed the monthly limit)
 
-### **Copilot** (GitHub)
-- Used for: Code completion and suggestions throughout development
-- Helped with: Writing boilerplate code and TypeScript types
+
 
 ### **Cursor** (AI Code Editor)
-- Used for: AI-assisted coding and refactoring
-- Helped with: Entire project development, debugging, and optimization
-- Primary development environment for the entire application
+- Used for: AI-assisted coding and debugging
+
 
 ---
 
 ## 6. How the Solution Handles Limited Internet Access
 
-Bisheshoggo AI is specifically designed to work in areas with poor or no internet connectivity. Here's how:
 
-### A. Offline-First Architecture
-
-#### **Local Database (SQLite)**
-```
-✅ All user data stored locally on device
-✅ Medical facilities cached for offline access
-✅ Symptom check history saved locally
-✅ Consultation records stored offline
-✅ No internet required for basic operations
-```
-
-#### **Progressive Web App (PWA)**
-```
-✅ Install app on any device (Android, iOS, Desktop)
-✅ Works like native app without app store
-✅ Launches offline
-✅ Updates automatically when online
-✅ Small download size (~5MB)
-```
-
-#### **Service Workers**
-```
-✅ Cache critical resources (HTML, CSS, JS)
-✅ Cache doctor video for offline playback
-✅ Cache medical facility data
-✅ Intercept network requests
-✅ Serve cached content when offline
-```
-
-### B. Offline Sync Queue
-
-When internet is unavailable, all user actions are queued and synced later:
-
-```
-User Action (Offline) → Saved to Sync Queue → Syncs When Online
-```
-
-**What Gets Queued:**
-- Symptom checks
-- Emergency SOS alerts
-- Consultation bookings
-- Profile updates
-- Medical record uploads
-
-**How It Works:**
-1. User performs action (e.g., checks symptoms)
-2. Action saved to `offline_sync_queue` table
-3. App continues working normally
-4. When internet returns, queue processes automatically
-5. User notified of successful sync
-
-### C. Intelligent Data Management
-
-#### **Cached Medical Facilities**
-- 6 major facilities pre-loaded (hospitals, clinics, pharmacies)
-- Covers Bandarban, Khagrachari, Rangamati districts
-- Includes contact info, services, operating hours
-- Updates when online, works offline
-
-#### **Lightweight AI Responses**
-- Compressed AI model responses
-- Cached common medical queries
-- Fallback to local symptom database
-- Minimal data transfer
-
-#### **Optimized Media**
-- Doctor video cached locally (public/doctor.mp4)
-- Compressed images and assets
-- Lazy loading for non-critical content
-- Progressive image loading
-
-### D. Low Bandwidth Mode
-
-When internet is slow:
-
-```
-✅ Text-only mode for consultations
-✅ Compressed image uploads
-✅ Reduced video quality
-✅ Prioritized data sync (emergencies first)
-✅ Background sync when bandwidth available
-```
-
-### E. Voice Features (No Typing Required)
-
-Perfect for low-literacy users and slow connections:
-
-```
-✅ Voice Input - Speak symptoms (works offline)
-✅ Voice Output - Hear advice (works offline)
-✅ No text typing needed
-✅ Uses browser's built-in Speech APIs
-✅ No internet required for voice processing
-```
-
-### F. Offline Capabilities by Feature
-
-| Feature | Offline Support | Notes |
-|---------|----------------|-------|
-| **AI Medical Chat** | ⚠️ Partial | Cached responses, needs online for new queries |
-| **Telemedicine (Voice)** | ⚠️ Partial | Voice works offline, AI needs online |
-| **Symptom Checker** | ⚠️ Partial | Basic checks offline, AI diagnosis needs online |
-| **Facility Locator** | ✅ Full | All facilities cached |
-| **Emergency SOS** | ✅ Full | Queued and sent when online |
-| **Prescription Scanner** | ❌ Online Only | Requires AI for OCR |
-| **Dashboard** | ✅ Full | Shows local data |
-| **Profile** | ✅ Full | Stored locally |
-| **Voice Input/Output** | ✅ Full | Browser-native, no internet needed |
-
-### G. Data Synchronization Strategy
-
-```
-Priority 1 (Immediate): Emergency SOS alerts
-Priority 2 (High): Symptom checks with high urgency
-Priority 3 (Medium): Consultation bookings
-Priority 4 (Low): Profile updates, history
-```
-
-### H. Technical Implementation
-
-#### **Offline Detection**
-```javascript
-// Detect online/offline status
-window.addEventListener('online', syncQueue);
-window.addEventListener('offline', showOfflineMode);
-```
-
-#### **Sync Queue Table**
-```sql
-CREATE TABLE offline_sync_queue (
-  id UUID PRIMARY KEY,
-  action_type VARCHAR,  -- 'symptom_check', 'emergency', etc.
-  payload JSON,         -- Action data
-  priority INTEGER,     -- 1 (high) to 4 (low)
-  created_at TIMESTAMP,
-  synced BOOLEAN
-);
-```
-
-#### **Background Sync**
-```javascript
-// Sync when online
-if (navigator.onLine) {
-  await syncOfflineQueue();
-}
-```
-
-### I. Real-World Usage Scenarios
-
-#### **Scenario 1: No Internet**
-```
-User in remote village with no internet:
-1. Opens app (works offline)
-2. Checks symptoms (uses cached data)
-3. Views nearby facilities (cached)
-4. Sends emergency SOS (queued)
-5. When reaches area with internet → Auto-syncs
-```
-
-#### **Scenario 2: Intermittent Internet**
-```
-User with unstable connection:
-1. Starts telemedicine consultation
-2. Connection drops mid-conversation
-3. App continues with cached responses
-4. User can still use voice input/output
-5. Conversation resumes when online
-```
-
-#### **Scenario 3: Low Bandwidth**
-```
-User with slow 2G connection:
-1. App loads in text-only mode
-2. Uses voice input (no typing)
-3. Receives text advice (no video)
-4. Downloads doctor video in background
-5. Full features available when downloaded
-```
-
-### J. Future Enhancements for Offline
-
-- **Offline AI Model**: Deploy lightweight model on-device
-- **Peer-to-Peer Sync**: Share data via Bluetooth/WiFi Direct
-- **SMS Fallback**: Send emergency alerts via SMS
-- **Offline Maps**: Download maps for navigation
-- **Voice Packs**: Download multiple language voice packs
-
----
 
 ## 🚀 Getting Started
 
@@ -467,31 +254,7 @@ http://localhost:3000
 
 ---
 
-## 📱 Features Overview
 
-### For Patients:
-- ✅ AI symptom checking with voice input
-- ✅ Video telemedicine with AI doctor
-- ✅ Voice-based consultation (speak & hear)
-- ✅ Find nearby healthcare facilities
-- ✅ Emergency SOS alerts
-- ✅ Prescription scanning
-- ✅ Health history tracking
-- ✅ Offline access to all features
-
-### For Healthcare Providers:
-- ✅ Telemedicine consultation platform
-- ✅ Patient management
-- ✅ Digital prescriptions
-- ✅ Emergency alert monitoring
-
-### For Community Health Workers:
-- ✅ Rapid symptom assessment
-- ✅ Patient triage
-- ✅ Health education resources
-- ✅ Emergency response coordination
-
----
 
 ## 🌍 Impact
 
@@ -517,22 +280,3 @@ http://localhost:3000
 - ✅ **Beautiful UI** - Modern, animated, responsive design
 - ✅ **Comprehensive** - All features working end-to-end
 
----
-
-## 📞 Support
-
-For questions or support, contact the NerdHerd team.
-
----
-
-## 📄 License
-
-This project is developed for the NSU Hackathon.
-
----
-
-**Built with ❤️ for Bangladesh's Hill Tracts**
-
-*Bisheshoggo AI - বিশেষজ্ঞ AI Healthcare Platform*
-
-**Empowering Rural Healthcare Through AI**

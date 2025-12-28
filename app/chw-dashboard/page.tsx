@@ -187,10 +187,10 @@ export default function CHWDashboardPage() {
                 <h1 className="text-2xl md:text-3xl font-bold">
                   {language === "en" ? "CHW Dashboard" : "সিএইচডব্লিউ ড্যাশবোর্ড"}
                 </h1>
-                <p className="text-sm text-muted-foreground flex items-center gap-2">
+                <div className="text-sm text-muted-foreground flex items-center gap-2">
                   <ConnectionStatus />
                   <span>{language === "en" ? "Community Health Worker Portal" : "কমিউনিটি স্বাস্থ্যকর্মী পোর্টাল"}</span>
-                </p>
+                </div>
               </div>
             </div>
             <Button

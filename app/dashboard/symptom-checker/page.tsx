@@ -49,18 +49,28 @@ export default function SymptomCheckerPage() {
   return (
     <div className="container mx-auto p-6 max-w-4xl">
       <div className="mb-6">
-        <h1 className="text-3xl font-bold">AI Symptom Checker</h1>
+        <h1 className="text-3xl font-bold flex items-center gap-3">
+          <span className="text-4xl">🩺</span>
+          Offline Dr
+        </h1>
         <p className="text-muted-foreground">
-          Describe your symptoms and get AI-powered health insights
+          AI-powered offline medical assistant • Powered by Local LLaMA
         </p>
+        <div className="mt-2 inline-flex items-center gap-2 bg-green-100 dark:bg-green-900/30 px-3 py-1 rounded-full text-sm text-green-700 dark:text-green-400">
+          <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
+          Works Offline • No Internet Required
+        </div>
       </div>
 
       <div className="grid gap-6 md:grid-cols-2">
         <Card>
           <CardHeader>
-            <CardTitle>Enter Your Symptoms</CardTitle>
+            <CardTitle className="flex items-center gap-2">
+              <span className="text-xl">💬</span>
+              Tell Me Your Symptoms
+            </CardTitle>
             <CardDescription>
-              Provide as much detail as possible for accurate analysis
+              Your local AI doctor will analyze and provide recommendations offline
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -120,14 +130,17 @@ export default function SymptomCheckerPage() {
                 </div>
               )}
 
-              <Button type="submit" className="w-full" disabled={isLoading}>
+              <Button type="submit" className="w-full bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700" disabled={isLoading}>
                 {isLoading ? (
                   <>
                     <Activity className="mr-2 h-4 w-4 animate-spin" />
-                    Analyzing...
+                    Offline Dr is Analyzing...
                   </>
                 ) : (
-                  "Analyze Symptoms"
+                  <>
+                    <span className="mr-2">🩺</span>
+                    Get Offline Diagnosis
+                  </>
                 )}
               </Button>
             </form>
@@ -141,7 +154,7 @@ export default function SymptomCheckerPage() {
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2 text-blue-900">
                     <CheckCircle2 className="h-5 w-5" />
-                    AI Analysis Complete
+                    🩺 Offline Dr Analysis Complete
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">

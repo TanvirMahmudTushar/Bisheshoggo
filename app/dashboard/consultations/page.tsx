@@ -47,13 +47,31 @@ export default function TelemedicinePage() {
     if (typeof window !== 'undefined') {
       synthesisRef.current = window.speechSynthesis;
       
+      // Load voices (needed for some browsers)
+      const loadVoices = () => {
+        if (synthesisRef.current) {
+          const voices = synthesisRef.current.getVoices();
+          console.log('Available voices loaded:', voices.length);
+          const bengaliVoices = voices.filter(v => v.lang.startsWith('bn') || v.lang.startsWith('hi'));
+          console.log('Bengali/Hindi voices:', bengaliVoices.map(v => `${v.name} (${v.lang})`));
+        }
+      };
+      
+      // Load voices immediately
+      loadVoices();
+      
+      // Also load when voices change (for Chrome)
+      if (synthesisRef.current) {
+        synthesisRef.current.onvoiceschanged = loadVoices;
+      }
+      
       // Initialize speech recognition
       const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
       if (SpeechRecognition) {
         recognitionRef.current = new SpeechRecognition();
         recognitionRef.current.continuous = false;
         recognitionRef.current.interimResults = false;
-        recognitionRef.current.lang = 'en-US';
+        recognitionRef.current.lang = 'bn-BD'; // Bengali (Bangladesh)
 
         recognitionRef.current.onresult = (event: any) => {
           const transcript = event.results[0][0].transcript;
@@ -61,7 +79,8 @@ export default function TelemedicinePage() {
           setIsListening(false);
         };
 
-        recognitionRef.current.onerror = () => {
+        recognitionRef.current.onerror = (event: any) => {
+          console.error('Speech recognition error:', event.error);
           setIsListening(false);
         };
 
@@ -76,7 +95,11 @@ export default function TelemedicinePage() {
         synthesisRef.current.cancel();
       }
       if (recognitionRef.current) {
-        recognitionRef.current.stop();
+        try {
+          recognitionRef.current.stop();
+        } catch (e) {
+          // Ignore errors on cleanup
+        }
       }
     };
   }, []);
@@ -84,18 +107,39 @@ export default function TelemedicinePage() {
   const startListening = () => {
     if (recognitionRef.current && !isListening) {
       try {
-        recognitionRef.current.start();
-        setIsListening(true);
+        // Stop any existing recognition before starting
+        try {
+          recognitionRef.current.stop();
+        } catch (e) {
+          // Ignore if already stopped
+        }
+        
+        // Small delay to ensure previous recognition is stopped
+        setTimeout(() => {
+          try {
+            recognitionRef.current.start();
+            setIsListening(true);
+          } catch (error) {
+            console.error('Failed to start speech recognition:', error);
+            setIsListening(false);
+          }
+        }, 100);
       } catch (error) {
         console.error('Speech recognition error:', error);
+        setIsListening(false);
       }
     }
   };
 
   const stopListening = () => {
     if (recognitionRef.current && isListening) {
-      recognitionRef.current.stop();
-      setIsListening(false);
+      try {
+        recognitionRef.current.stop();
+        setIsListening(false);
+      } catch (error) {
+        console.error('Error stopping speech recognition:', error);
+        setIsListening(false);
+      }
     }
   };
 
@@ -105,23 +149,100 @@ export default function TelemedicinePage() {
       synthesisRef.current.cancel();
       
       const utterance = new SpeechSynthesisUtterance(text);
-      utterance.rate = 0.9;
-      utterance.pitch = 1;
+      utterance.lang = 'bn-BD'; // Bengali language
+      utterance.rate = 0.75; // Slower
+      utterance.pitch = 0.4; // VERY LOW pitch for definitely male voice
       utterance.volume = 1;
+      
+      // Get all available voices
+      const voices = synthesisRef.current.getVoices();
+      console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+      console.log('ALL AVAILABLE VOICES:');
+      voices.forEach((v, i) => console.log(`${i + 1}. ${v.name} (${v.lang}) ${v.localService ? '[Local]' : '[Remote]'}`));
+      console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+      
+      // Filter out FEMALE voices explicitly
+      const nonFemaleVoices = voices.filter(voice => 
+        !voice.name.toLowerCase().includes('female') &&
+        !voice.name.toLowerCase().includes('woman') &&
+        !voice.name.toLowerCase().includes('girl')
+      );
+      
+      console.log('Non-female voices:', nonFemaleVoices.map(v => v.name).join(', '));
+      
+      let selectedVoice = null;
+      
+      // Priority 1: Google Bengali (non-female)
+      selectedVoice = nonFemaleVoices.find(voice => 
+        voice.name.toLowerCase().includes('google') && 
+        voice.lang.startsWith('bn')
+      );
+      if (selectedVoice) console.log('✅ Priority 1: Google Bengali ->', selectedVoice.name);
+      
+      // Priority 2: Any Bengali (non-female)
+      if (!selectedVoice) {
+        selectedVoice = nonFemaleVoices.find(voice => voice.lang.startsWith('bn'));
+        if (selectedVoice) console.log('✅ Priority 2: Any Bengali ->', selectedVoice.name);
+      }
+      
+      // Priority 3: Google Hindi (non-female)
+      if (!selectedVoice) {
+        selectedVoice = nonFemaleVoices.find(voice => 
+          voice.name.toLowerCase().includes('google') && 
+          voice.lang.startsWith('hi')
+        );
+        if (selectedVoice) console.log('✅ Priority 3: Google Hindi ->', selectedVoice.name);
+      }
+      
+      // Priority 4: Any Hindi (non-female)
+      if (!selectedVoice) {
+        selectedVoice = nonFemaleVoices.find(voice => voice.lang.startsWith('hi'));
+        if (selectedVoice) console.log('✅ Priority 4: Any Hindi ->', selectedVoice.name);
+      }
+      
+      // Priority 5: First non-female voice as absolute fallback
+      if (!selectedVoice && nonFemaleVoices.length > 0) {
+        selectedVoice = nonFemaleVoices[0];
+        console.log('✅ Priority 5: First non-female ->', selectedVoice.name);
+      }
+      
+      if (selectedVoice) {
+        utterance.voice = selectedVoice;
+        console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+        console.log('🎤 USING VOICE:', selectedVoice.name);
+        console.log('📍 Language:', selectedVoice.lang);
+        console.log('🔊 Pitch:', utterance.pitch, '(Very low for male voice)');
+        console.log('⚡ Rate:', utterance.rate);
+        console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+      } else {
+        console.log('⚠️ WARNING: Using default voice (may be female)');
+        console.log('💡 TIP: Install Bengali voices in your browser/OS');
+      }
       
       utterance.onstart = () => {
         setIsSpeaking(true);
+        console.log('Speech started');
       };
       
       utterance.onend = () => {
         setIsSpeaking(false);
+        console.log('Speech ended');
       };
       
-      utterance.onerror = () => {
+      utterance.onerror = (event) => {
         setIsSpeaking(false);
+        console.error('Speech error:', event.error);
       };
       
-      synthesisRef.current.speak(utterance);
+      try {
+        synthesisRef.current.speak(utterance);
+        console.log('Speaking:', text.substring(0, 50) + '...');
+      } catch (error) {
+        console.error('Failed to speak:', error);
+        setIsSpeaking(false);
+      }
+    } else {
+      console.log('Speech synthesis not available or voice disabled');
     }
   };
 
@@ -135,11 +256,13 @@ export default function TelemedicinePage() {
 
   const startCall = () => {
     setIsCallActive(true);
+    const welcomeMessage = "আসসালামু আলাইকুম! আমি ডাঃ Fariha, বিশেষজ্ঞ AI থেকে। আপনাদের সেবায় সর্বদা নিয়োজিত। আপনার স্বাস্থ্য সমস্যা নিয়ে আমি আপনাকে সাহায্য করতে পারি। আজ আমি কিভাবে আপনাকে সাহায্য করতে পারি?";
+    
     setMessages([
       {
         id: "welcome",
         role: "assistant",
-        content: "Hello! I'm Dr. AI from Bisheshoggo Health. I'm here to help you with your medical concerns. How can I assist you today?",
+        content: welcomeMessage,
         timestamp: new Date(),
       },
     ]);
@@ -148,6 +271,8 @@ export default function TelemedicinePage() {
     if (videoRef.current) {
       videoRef.current.play();
     }
+    
+    // Don't speak welcome message - only speak when user sends prompts
   };
 
   const endCall = () => {
@@ -199,7 +324,7 @@ export default function TelemedicinePage() {
           messages: [
             {
               role: "system",
-              content: "You are Dr. AI, a compassionate and knowledgeable medical doctor providing telemedicine consultations for patients in Bangladesh's Hill Tracts and rural regions. Provide professional medical advice, ask relevant questions, and show empathy. If the condition is serious, recommend seeing a doctor in person. Keep responses concise but informative."
+              content: "You are Dr. Fariha, a compassionate and knowledgeable AI medical doctor providing telemedicine consultations for patients in Bangladesh's Hill Tracts and rural regions. আপনাদের সেবায় সর্বদা নিয়োজিত (Always dedicated to your service). Provide professional medical advice, ask relevant questions, and show empathy. If the condition is serious, recommend seeing a doctor in person. Keep responses concise but informative. You can use Bengali phrases when appropriate to make patients feel comfortable."
             },
             ...messages.map((m) => ({
               role: m.role,
@@ -237,7 +362,7 @@ export default function TelemedicinePage() {
       const errorMessage: Message = {
         id: (Date.now() + 1).toString(),
         role: "assistant",
-        content: "I'm sorry, I'm having trouble connecting right now. Please try again in a moment.",
+        content: "দুঃখিত, আমি এই মুহূর্তে সংযোগ করতে সমস্যা হচ্ছে। অনুগ্রহ করে একটু পরে আবার চেষ্টা করুন।",
         timestamp: new Date(),
       };
       setMessages((prev) => [...prev, errorMessage]);
@@ -266,25 +391,46 @@ export default function TelemedicinePage() {
 
   return (
     <div className="container mx-auto p-6 max-w-7xl">
-      <div className="mb-6">
-        <h1 className="text-3xl font-bold flex items-center gap-3">
-          <Video className="h-8 w-8 text-primary" />
-          Telemedicine - AI Doctor Consultation
-        </h1>
-        <p className="text-muted-foreground">
-          Consult with Dr. AI for medical advice in real-time
-        </p>
-      </div>
+      <motion.div 
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="mb-8"
+      >
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <h1 className="text-4xl font-bold flex items-center gap-3 bg-gradient-to-r from-emerald-600 to-blue-600 bg-clip-text text-transparent">
+              <Video className="h-10 w-10 text-emerald-600" />
+              Telemedicine
+            </h1>
+            <p className="text-2xl font-semibold text-slate-700 dark:text-slate-300 mt-2 ml-14">
+              আপনাদের সেবায় সর্বদা নিয়োজিত
+            </p>
+            <p className="text-muted-foreground ml-14 mt-1">
+              Real-time medical consultation with Dr. Fariha • Available 24/7
+            </p>
+          </div>
+        </div>
+      </motion.div>
 
       <div className="grid gap-6 lg:grid-cols-3">
         {/* Video Section */}
-        <div className="lg:col-span-1">
-          <Card className="overflow-hidden">
-            <CardHeader className="bg-gradient-to-br from-blue-500 to-purple-600 text-white">
+        <motion.div 
+          initial={{ opacity: 0, x: -20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ delay: 0.1 }}
+          className="lg:col-span-1"
+        >
+          <Card className="overflow-hidden border-2 border-emerald-500/20 shadow-xl">
+            <CardHeader className="bg-gradient-to-br from-emerald-600 via-teal-600 to-blue-600 text-white">
               <CardTitle className="flex items-center justify-between">
-                <span>Dr. AI</span>
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full bg-white/20 backdrop-blur flex items-center justify-center">
+                    <span className="text-2xl">👨‍⚕️</span>
+                  </div>
+                  <span className="text-xl font-bold">Dr. Fariha</span>
+                </div>
                 {isCallActive && (
-                  <span className="flex items-center gap-2 text-sm">
+                  <span className="flex items-center gap-2 text-sm bg-white/20 backdrop-blur px-3 py-1 rounded-full">
                     <span className="relative flex h-3 w-3">
                       <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
                       <span className="relative inline-flex rounded-full h-3 w-3 bg-green-500"></span>
@@ -318,46 +464,57 @@ export default function TelemedicinePage() {
                               <div className="w-1 h-4 bg-green-500 animate-pulse" style={{ animationDelay: "150ms" }}></div>
                               <div className="w-1 h-4 bg-green-500 animate-pulse" style={{ animationDelay: "300ms" }}></div>
                             </div>
-                            <span>Dr. AI is speaking...</span>
+                            <span>Dr. is speaking...</span>
                           </div>
                         </div>
                       </motion.div>
                     )}
                   </>
                 ) : (
-                  <div className="absolute inset-0 flex flex-col items-center justify-center text-white p-6 text-center">
-                    <div className="mb-6">
-                      <div className="w-24 h-24 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center mb-4">
-                        <Video className="h-12 w-12" />
+                  <div className="absolute inset-0 flex flex-col items-center justify-center text-white p-6 text-center bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
+                    <motion.div 
+                      initial={{ scale: 0.9, opacity: 0 }}
+                      animate={{ scale: 1, opacity: 1 }}
+                      transition={{ delay: 0.2 }}
+                      className="mb-6"
+                    >
+                      <div className="w-32 h-32 rounded-full bg-gradient-to-br from-emerald-500 via-teal-500 to-blue-500 flex items-center justify-center mb-6 shadow-2xl">
+                        <span className="text-6xl">👨‍⚕️</span>
                       </div>
-                      <h3 className="text-xl font-bold mb-2">Dr. AI</h3>
-                      <p className="text-sm text-slate-300">
-                        Medical Specialist
+                      <h3 className="text-2xl font-bold mb-2 bg-gradient-to-r from-emerald-400 to-blue-400 bg-clip-text text-transparent">
+                        Dr. Fariha
+                      </h3>
+                      <p className="text-base text-emerald-300 font-medium">
+                        AI Medical Specialist
                       </p>
-                      <p className="text-xs text-slate-400 mt-2">
-                        Available 24/7
+                      <p className="text-sm text-slate-400 mt-3 px-4">
+                        আপনাদের সেবায় সর্বদা নিয়োজিত
                       </p>
-                    </div>
+                      <div className="mt-4 inline-flex items-center gap-2 bg-green-500/20 backdrop-blur px-4 py-2 rounded-full">
+                        <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                        <span className="text-xs text-green-300">Available 24/7</span>
+                      </div>
+                    </motion.div>
                   </div>
                 )}
               </div>
               
-              <div className="p-4 bg-slate-50 dark:bg-slate-900 space-y-2">
+              <div className="p-4 bg-gradient-to-br from-emerald-50 to-blue-50 dark:from-slate-900 dark:to-slate-800 space-y-2">
                 {!isCallActive ? (
                   <Button
                     onClick={startCall}
-                    className="w-full bg-green-600 hover:bg-green-700"
+                    className="w-full bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 shadow-lg"
                     size="lg"
                   >
                     <Phone className="mr-2 h-5 w-5" />
-                    Start Consultation
+                    Start Consultation with Dr. Fariha
                   </Button>
                 ) : (
                   <>
                     <Button
                       onClick={endCall}
                       variant="destructive"
-                      className="w-full"
+                      className="w-full shadow-lg"
                       size="lg"
                     >
                       <PhoneOff className="mr-2 h-5 w-5" />
@@ -366,12 +523,12 @@ export default function TelemedicinePage() {
                     <Button
                       onClick={toggleVoice}
                       variant="outline"
-                      className="w-full"
+                      className="w-full border-emerald-500/50 hover:bg-emerald-50"
                       size="sm"
                     >
                       {voiceEnabled ? (
                         <>
-                          <Volume2 className="mr-2 h-4 w-4" />
+                          <Volume2 className="mr-2 h-4 w-4 text-emerald-600" />
                           Voice On
                         </>
                       ) : (
@@ -388,32 +545,50 @@ export default function TelemedicinePage() {
           </Card>
 
           {isCallActive && (
-            <Card className="mt-4">
-              <CardContent className="p-4">
-                <h4 className="font-semibold mb-2 text-sm">Quick Tips:</h4>
-                <ul className="text-xs text-muted-foreground space-y-1">
-                  <li>• Describe your symptoms clearly</li>
-                  <li>• Mention duration and severity</li>
-                  <li>• Share relevant medical history</li>
-                  <li>• Ask about medications if needed</li>
-                </ul>
-              </CardContent>
-            </Card>
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.3 }}
+            >
+              <Card className="mt-4 border-emerald-500/20 bg-gradient-to-br from-emerald-50 to-teal-50 dark:from-slate-800 dark:to-slate-900">
+                
+              </Card>
+            </motion.div>
           )}
-        </div>
+        </motion.div>
 
         {/* Chat Section */}
-        <div className="lg:col-span-2">
-          <Card className="h-[calc(100vh-12rem)] flex flex-col">
-            <CardHeader className="border-b">
-              <CardTitle className="text-lg">Consultation Chat</CardTitle>
+        <motion.div 
+          initial={{ opacity: 0, x: 20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ delay: 0.2 }}
+          className="lg:col-span-2"
+        >
+          <Card className="h-[calc(100vh-12rem)] flex flex-col border-2 border-emerald-500/20 shadow-xl">
+            <CardHeader className="border-b bg-gradient-to-r from-emerald-50 to-teal-50 dark:from-slate-900 dark:to-slate-800">
+              <CardTitle className="text-lg flex items-center gap-2">
+                <span className="text-2xl">💬</span>
+                Consultation Chat with Dr. Fariha
+              </CardTitle>
             </CardHeader>
-            <CardContent className="flex-1 overflow-y-auto p-4">
+            <CardContent className="flex-1 overflow-y-auto p-4 bg-gradient-to-br from-slate-50 to-white dark:from-slate-950 dark:to-slate-900">
               {!isCallActive ? (
-                <div className="flex flex-col items-center justify-center h-full text-center text-muted-foreground">
-                  <Video className="h-16 w-16 mb-4 opacity-50" />
-                  <h3 className="text-lg font-semibold mb-2">Start a consultation to chat with Dr. AI</h3>
-                  <p className="text-sm">Click "Start Consultation" to begin your telemedicine session</p>
+                <div className="flex flex-col items-center justify-center h-full text-center">
+                  <motion.div
+                    initial={{ scale: 0.8, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    transition={{ delay: 0.3 }}
+                  >
+                    <div className="w-24 h-24 rounded-full bg-gradient-to-br from-emerald-500 to-teal-500 flex items-center justify-center mb-6 shadow-xl">
+                      <Video className="h-12 w-12 text-white" />
+                    </div>
+                    <h3 className="text-xl font-bold mb-2 bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent">
+                      Start a consultation to chat with Dr. Fariha
+                    </h3>
+                    <p className="text-sm text-muted-foreground max-w-md">
+                      Click "Start Consultation" to begin your telemedicine session with our AI medical specialist
+                    </p>
+                  </motion.div>
                 </div>
               ) : (
                 <div className="space-y-4">
@@ -426,22 +601,25 @@ export default function TelemedicinePage() {
                         exit={{ opacity: 0, y: -20 }}
                         className={`flex ${message.role === "user" ? "justify-end" : "justify-start"}`}
                       >
-                        <div
-                          className={`max-w-[80%] rounded-lg p-4 ${
+                          <div
+                          className={`max-w-[80%] rounded-2xl p-4 shadow-md ${
                             message.role === "user"
-                              ? "bg-primary text-primary-foreground"
-                              : "bg-muted"
+                              ? "bg-gradient-to-br from-emerald-600 to-teal-600 text-white"
+                              : "bg-white dark:bg-slate-800 border-2 border-emerald-500/20"
                           }`}
                         >
-                          <div className="flex items-start gap-2">
+                          <div className="flex items-start gap-3">
                             {message.role === "assistant" && (
-                              <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white text-xs font-bold flex-shrink-0">
-                                Dr
+                              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-emerald-500 to-teal-500 flex items-center justify-center text-white shadow-lg flex-shrink-0">
+                                <span className="text-lg">👨‍⚕️</span>
                               </div>
                             )}
                             <div className="flex-1">
-                              <p className="text-sm whitespace-pre-wrap">{message.content}</p>
-                              <p className="text-xs opacity-70 mt-1">
+                              {message.role === "assistant" && (
+                                <p className="text-xs font-semibold text-emerald-600 dark:text-emerald-400 mb-1">Dr. Fariha</p>
+                              )}
+                              <p className="text-sm whitespace-pre-wrap leading-relaxed">{message.content}</p>
+                              <p className="text-xs opacity-70 mt-2">
                                 {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                               </p>
                             </div>
@@ -457,15 +635,18 @@ export default function TelemedicinePage() {
                       animate={{ opacity: 1 }}
                       className="flex justify-start"
                     >
-                      <div className="bg-muted rounded-lg p-4">
-                        <div className="flex items-center gap-2">
-                          <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white text-xs font-bold">
-                            Dr
+                      <div className="bg-white dark:bg-slate-800 border-2 border-emerald-500/20 rounded-2xl p-4 shadow-md">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-emerald-500 to-teal-500 flex items-center justify-center text-white shadow-lg">
+                            <span className="text-lg">👨‍⚕️</span>
                           </div>
-                          <div className="flex gap-1">
-                            <div className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: "0ms" }}></div>
-                            <div className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: "150ms" }}></div>
-                            <div className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: "300ms" }}></div>
+                          <div>
+                            <p className="text-xs font-semibold text-emerald-600 dark:text-emerald-400 mb-1">Dr. Fariha</p>
+                            <div className="flex gap-1">
+                              <div className="w-2 h-2 bg-emerald-500 rounded-full animate-bounce" style={{ animationDelay: "0ms" }}></div>
+                              <div className="w-2 h-2 bg-emerald-500 rounded-full animate-bounce" style={{ animationDelay: "150ms" }}></div>
+                              <div className="w-2 h-2 bg-emerald-500 rounded-full animate-bounce" style={{ animationDelay: "300ms" }}></div>
+                            </div>
                           </div>
                         </div>
                       </div>
@@ -478,14 +659,14 @@ export default function TelemedicinePage() {
             </CardContent>
             
             {isCallActive && (
-              <div className="border-t p-4">
+              <div className="border-t bg-gradient-to-r from-emerald-50 to-teal-50 dark:from-slate-900 dark:to-slate-800 p-4">
                 <div className="flex gap-2">
                   <div className="flex-1 flex gap-2">
                     <Textarea
                       value={input}
                       onChange={(e) => setInput(e.target.value)}
-                      placeholder="Describe your symptoms or ask a question..."
-                      className="min-h-[60px] resize-none flex-1"
+                      placeholder="আপনার লক্ষণ বর্ণনা করুন বা ডাঃ Farihaকে প্রশ্ন করুন... (বাংলায় লিখুন)"
+                      className="min-h-[60px] resize-none flex-1 border-2 border-emerald-500/20 focus:border-emerald-500"
                       onKeyDown={(e) => {
                         if (e.key === "Enter" && !e.shiftKey) {
                           e.preventDefault();
@@ -499,13 +680,13 @@ export default function TelemedicinePage() {
                       disabled={isSending}
                       size="icon"
                       variant={isListening ? "destructive" : "outline"}
-                      className="h-[60px] w-[60px] flex-shrink-0"
+                      className={`h-[60px] w-[60px] flex-shrink-0 ${!isListening ? 'border-2 border-emerald-500/50 hover:bg-emerald-50' : ''}`}
                       title={isListening ? "Stop listening" : "Voice input"}
                     >
                       {isListening ? (
                         <MicOff className="h-5 w-5 animate-pulse" />
                       ) : (
-                        <Mic className="h-5 w-5" />
+                        <Mic className="h-5 w-5 text-emerald-600" />
                       )}
                     </Button>
                   </div>
@@ -513,7 +694,7 @@ export default function TelemedicinePage() {
                     onClick={handleSendMessage}
                     disabled={!input.trim() || isSending}
                     size="icon"
-                    className="h-[60px] w-[60px] flex-shrink-0"
+                    className="h-[60px] w-[60px] flex-shrink-0 bg-gradient-to-br from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 shadow-lg"
                   >
                     {isSending ? (
                       <Loader2 className="h-5 w-5 animate-spin" />
@@ -523,21 +704,21 @@ export default function TelemedicinePage() {
                   </Button>
                 </div>
                 {isListening && (
-                  <p className="text-xs text-muted-foreground mt-2 flex items-center gap-2">
+                  <p className="text-xs text-emerald-700 dark:text-emerald-400 mt-2 flex items-center gap-2 font-medium">
                     <Mic className="h-3 w-3 animate-pulse text-red-500" />
-                    Listening... Speak now
+                    🎤 শুনছি... এখন বাংলায় বলুন
                   </p>
                 )}
                 {isSpeaking && (
-                  <p className="text-xs text-muted-foreground mt-2 flex items-center gap-2">
+                  <p className="text-xs text-blue-700 dark:text-blue-400 mt-2 flex items-center gap-2 font-medium">
                     <Volume2 className="h-3 w-3 animate-pulse text-blue-500" />
-                    Dr. AI is speaking...
+                    🔊 ডাঃ Fariha কথা বলছেন...
                   </p>
                 )}
               </div>
             )}
           </Card>
-        </div>
+        </motion.div>
       </div>
     </div>
   );

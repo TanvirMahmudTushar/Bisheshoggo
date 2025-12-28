@@ -66,8 +66,8 @@ export function DashboardContent({
   const quickActions = [
     {
       icon: Stethoscope,
-      title: "Check Symptoms",
-      description: "AI-powered offline symptom checker",
+      title: "Offline Dr",
+      description: "AI-powered offline medical assistant",
       href: "/check-symptoms",
       color: "text-emerald-500",
       bgColor: "bg-emerald-500/10",
@@ -143,7 +143,7 @@ export function DashboardContent({
         className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-muted transition-colors"
       >
         <Stethoscope className="w-5 h-5" />
-        <span>Check Symptoms</span>
+        <span>Offline Dr</span>
       </Link>
       <Link
         href="/emergency"
@@ -203,7 +203,7 @@ export function DashboardContent({
             <Image src="/logo.png" alt="Bisheshoggo AI" width={40} height={40} className="rounded-xl" />
             <div>
               <h1 className="text-lg font-bold">Bisheshoggo AI</h1>
-              <p className="text-xs text-muted-foreground">Healthcare Portal</p>
+              <p className="text-xs text-muted-foreground">Doctor you need</p>
             </div>
           </Link>
         </div>
@@ -252,7 +252,7 @@ export function DashboardContent({
                     <Image src="/logo.png" alt="Bisheshoggo AI" width={40} height={40} className="rounded-xl" />
                     <div>
                       <h1 className="text-lg font-bold">Bisheshoggo AI</h1>
-                      <p className="text-xs text-muted-foreground">Healthcare Portal</p>
+                      <p className="text-xs text-muted-foreground">Doctor you need</p>
                     </div>
                   </div>
                 </div>

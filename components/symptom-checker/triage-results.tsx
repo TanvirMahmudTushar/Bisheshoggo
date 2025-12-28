@@ -57,9 +57,12 @@ export function TriageResults({ result, language, onReset }: TriageResultsProps)
             <div className="flex items-center gap-3">
               {getRiskIcon()}
               <div>
-                <CardTitle className="text-2xl">{urgency}</CardTitle>
+                <CardTitle className="text-2xl flex items-center gap-2">
+                  <span>🩺</span>
+                  {urgency}
+                </CardTitle>
                 <CardDescription className="text-base mt-1">
-                  {language === "en" ? "Risk Assessment" : "ঝুঁকি মূল্যায়ন"}
+                  {language === "en" ? "Offline Dr Assessment" : "অফলাইন ডাক্তারের মূল্যায়ন"}
                 </CardDescription>
               </div>
             </div>
@@ -150,7 +153,7 @@ export function TriageResults({ result, language, onReset }: TriageResultsProps)
       <div className="flex flex-col sm:flex-row gap-4">
         <Button variant="outline" size="lg" className="flex-1 h-12 bg-transparent" onClick={onReset}>
           <RotateCcw className="w-5 h-5 mr-2" />
-          {language === "en" ? "Check Again" : "আবার পরীক্ষা করুন"}
+          {language === "en" ? "Ask Offline Dr Again" : "অফলাইন ডাক্তারকে আবার জিজ্ঞাসা করুন"}
         </Button>
         <Button size="lg" className="flex-1 h-12" asChild>
           <Link href="/dashboard/consultations">{language === "en" ? "Book Consultation" : "পরামর্শ বুক করুন"}</Link>

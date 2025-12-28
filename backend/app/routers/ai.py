@@ -123,7 +123,7 @@ async def get_medicine_suggestions(
     current_user: models.User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-    """Get AI-powered medicine suggestions based on prescription"""
+    """Get AI-powered medicine suggestions based on prescription and current symptoms"""
     try:
         from groq import Groq
         
@@ -135,58 +135,60 @@ async def get_medicine_suggestions(
             models.Consultation.status == models.ConsultationStatus.completed
         ).order_by(models.Consultation.created_at.desc()).limit(5).all()
         
-        medical_records = db.query(models.MedicalRecord).filter(
-            models.MedicalRecord.patient_id == current_user.id
-        ).order_by(models.MedicalRecord.created_at.desc()).limit(5).all()
-        
-        # Build context
+        # Build consultation history context
         consultation_history = "\n\n".join([
             f"Diagnosis: {c.diagnosis or 'N/A'}\nSymptoms: {c.symptoms or 'N/A'}\nPrescription: {c.prescription or 'N/A'}"
             for c in consultations
         ])
         
-        record_history = "\n\n".join([
-            f"{r.record_type or 'Record'}: {r.title or ''}\n{r.description or ''}"
-            for r in medical_records
-        ])
-        
-        history_context = "\n\n---\n\n".join(filter(None, [consultation_history, record_history]))
-        
-        prompt = f"""As a medical AI assistant, analyze the following prescription and provide detailed medicine suggestions.
+        prompt = f"""As a medical AI assistant for rural Bangladesh, analyze this prescription and patient's current condition to provide personalized medicine recommendations.
 
-Current Prescription:
+PRESCRIPTION MEDICINES:
 {json.dumps(request.prescriptions, indent=2)}
 
-Diagnosis: {request.diagnosis or "Not specified"}
+ORIGINAL DIAGNOSIS: {request.diagnosis or "Not specified"}
 
-Patient Medical History:
-{history_context or "No previous records"}
-
-Patient Information:
+PATIENT'S CURRENT INFORMATION:
 {request.patientHistory or "Not provided"}
 
-Please provide your response in the following JSON format:
+PREVIOUS MEDICAL HISTORY:
+{consultation_history or "No previous records"}
+
+IMPORTANT: The patient has provided information about:
+1. How long they've been taking these medicines
+2. Their CURRENT symptoms
+3. Any additional health concerns
+
+YOUR TASK:
+1. Analyze which medicines from the prescription are relevant for the patient's CURRENT symptoms
+2. Recommend which medicines they should continue taking and which they can stop
+3. Explain WHY each medicine is or isn't needed based on their current symptoms
+4. Provide specific dosage instructions for medicines they should take
+5. Warn about any medicines that shouldn't be continued without symptoms
+
+Respond in this JSON format:
 {{
     "suggestions": [
         {{
-            "medicine": "Medicine name",
-            "reason": "Why this medicine is prescribed",
-            "alternatives": ["Alternative 1", "Alternative 2"],
-            "precautions": ["Precaution 1", "Precaution 2"],
-            "interactions": ["Drug interaction 1"],
+            "medicine": "Medicine name from prescription",
+            "reason": "Detailed explanation: Is this medicine needed for current symptoms? Should they continue or stop?",
+            "shouldTake": "YES - Continue taking" or "NO - Not needed for current symptoms" or "CONSULT - Requires doctor consultation",
+            "alternatives": ["Cheaper/available alternatives in rural Bangladesh"],
+            "precautions": ["Important precautions"],
+            "interactions": ["Drug interactions to watch"],
             "effectiveness": "high" | "moderate" | "low"
         }}
     ],
-    "overallRecommendation": "Overall recommendation text",
-    "warnings": ["Warning 1", "Warning 2"]
+    "overallRecommendation": "Clear guidance on which medicines to take NOW based on current symptoms, and which to stop or consult about",
+    "warnings": ["Important warnings about medicine usage, stopping, or seeking medical help"]
 }}
 
 Consider:
-- Availability in rural Bangladesh
+- Match medicines to CURRENT symptoms specifically
+- Medicines available in rural Bangladesh
 - Cost-effective alternatives
-- Common side effects
-- Drug interactions
-- Suitable for limited medical facilities"""
+- Safety of continuing/stopping medicines
+- When to seek immediate medical help"""
 
         response = client.chat.completions.create(
             model="llama-3.3-70b-versatile",

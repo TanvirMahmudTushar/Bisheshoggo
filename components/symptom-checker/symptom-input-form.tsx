@@ -358,8 +358,9 @@ export function SymptomInputForm({ onResult, language }: SymptomInputFormProps) 
         />
       </div>
 
-      <Button type="submit" size="lg" className="w-full text-lg h-14" disabled={selectedSymptoms.length === 0}>
-        {language === "en" ? "Get Assessment" : "মূল্যায়ন পান"}
+      <Button type="submit" size="lg" className="w-full text-lg h-14 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700" disabled={selectedSymptoms.length === 0}>
+        <span className="mr-2">🩺</span>
+        {language === "en" ? "Get Offline Dr Assessment" : "অফলাইন ডাক্তারের মূল্যায়ন পান"}
       </Button>
     </form>
   )

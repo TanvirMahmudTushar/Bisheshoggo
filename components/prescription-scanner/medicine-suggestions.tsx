@@ -4,8 +4,12 @@ import { useState } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Textarea } from "@/components/ui/textarea"
 import { motion, AnimatePresence } from "framer-motion"
-import { Sparkles, AlertTriangle, CheckCircle2, Info, Loader2, ChevronDown, ChevronUp, Pill } from "lucide-react"
+import { Sparkles, AlertTriangle, CheckCircle2, Info, Loader2, ChevronDown, ChevronUp, Pill, MessageSquare } from "lucide-react"
+import { aiApi } from "@/lib/api/client"
 
 interface MedicineSuggestionsProps {
   prescriptions: Array<{
@@ -21,25 +25,61 @@ export function MedicineSuggestions({ prescriptions, diagnosis }: MedicineSugges
   const [suggestions, setSuggestions] = useState<any>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [expandedIndex, setExpandedIndex] = useState<number | null>(null)
+  const [showQuestionnaire, setShowQuestionnaire] = useState(false)
+  
+  // Questionnaire state
+  const [usageDuration, setUsageDuration] = useState("")
+  const [currentSymptoms, setCurrentSymptoms] = useState("")
+  const [additionalInfo, setAdditionalInfo] = useState("")
 
   const fetchSuggestions = async () => {
     setIsLoading(true)
     try {
-      const response = await fetch("/api/ai/medicine-suggestions", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ prescriptions, diagnosis }),
+      // Build comprehensive patient history from questionnaire
+      const patientHistory = `
+Usage Duration: ${usageDuration || "Not specified"}
+Current Symptoms: ${currentSymptoms || "Not specified"}
+Additional Information: ${additionalInfo || "None"}
+      `.trim()
+
+      const response = await aiApi.getMedicineSuggestions({
+        prescriptions,
+        diagnosis: diagnosis || "Not specified",
+        patientHistory
       })
 
-      if (!response.ok) throw new Error("Failed to fetch suggestions")
-
-      const data = await response.json()
-      setSuggestions(data)
+      setSuggestions(response)
+      setShowQuestionnaire(false)
     } catch (error) {
-      console.error("[ ] Medicine suggestions error:", error)
+      console.error("[Bisheshoggo AI] Medicine suggestions error:", error)
+      // Fallback with basic suggestions
+      setSuggestions({
+        suggestions: prescriptions.map(med => ({
+          medicine: med.name,
+          reason: "Continue as prescribed",
+          alternatives: [],
+          precautions: ["Follow doctor's instructions", "Complete the full course"],
+          interactions: [],
+          effectiveness: "moderate"
+        })),
+        overallRecommendation: "Please consult with your healthcare provider for personalized advice.",
+        warnings: ["Unable to connect to AI service. Please try again later."]
+      })
     } finally {
       setIsLoading(false)
     }
+  }
+
+  const startQuestionnaire = () => {
+    setShowQuestionnaire(true)
+  }
+
+  const handleSubmitQuestionnaire = () => {
+    if (!currentSymptoms.trim()) {
+      alert("Please enter your current symptoms")
+      return
+    }
+    fetchSuggestions()
   }
 
   const getEffectivenessColor = (effectiveness: string) => {
@@ -64,19 +104,101 @@ export function MedicineSuggestions({ prescriptions, diagnosis }: MedicineSugges
               <Sparkles className="h-5 w-5 text-primary" />
               AI Medicine Analysis
             </CardTitle>
-            {!suggestions && !isLoading && (
-              <Button onClick={fetchSuggestions} size="sm">
+            {!suggestions && !isLoading && !showQuestionnaire && (
+              <Button onClick={startQuestionnaire} size="sm" className="gap-2">
+                <MessageSquare className="h-4 w-4" />
                 Get AI Insights
               </Button>
             )}
           </div>
         </CardHeader>
 
+        {showQuestionnaire && !isLoading && (
+          <CardContent>
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="space-y-6"
+            >
+              <div className="rounded-lg border border-primary/20 bg-primary/5 p-4">
+                <div className="flex items-start gap-3">
+                  <MessageSquare className="h-5 w-5 shrink-0 text-primary mt-1" />
+                  <div>
+                    <p className="font-medium mb-1">AI Medical Assistant</p>
+                    <p className="text-sm text-muted-foreground">
+                      To provide you with the best medicine recommendations, please answer a few questions about your health.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="usageDuration" className="text-base">
+                    For how many months have you been taking these medicines? *
+                  </Label>
+                  <Input
+                    id="usageDuration"
+                    value={usageDuration}
+                    onChange={(e) => setUsageDuration(e.target.value)}
+                    placeholder="e.g., 2 months, 1 week, just started"
+                    className="bg-background"
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    This helps us understand if you need to continue or adjust your medication.
+                  </p>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="currentSymptoms" className="text-base">
+                    What symptoms do you currently have? *
+                  </Label>
+                  <Textarea
+                    id="currentSymptoms"
+                    value={currentSymptoms}
+                    onChange={(e) => setCurrentSymptoms(e.target.value)}
+                    placeholder="Describe your current symptoms in detail (e.g., fever, headache, stomach pain, cough...)"
+                    className="min-h-[100px] bg-background"
+                    required
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Based on your symptoms, AI will recommend which medicines from your prescription to take.
+                  </p>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="additionalInfo" className="text-base">
+                    Any other health concerns or questions?
+                  </Label>
+                  <Textarea
+                    id="additionalInfo"
+                    value={additionalInfo}
+                    onChange={(e) => setAdditionalInfo(e.target.value)}
+                    placeholder="e.g., allergies, side effects, pregnancy, other medications..."
+                    className="min-h-[80px] bg-background"
+                  />
+                </div>
+              </div>
+
+              <div className="flex gap-3">
+                <Button onClick={handleSubmitQuestionnaire} className="flex-1">
+                  <Sparkles className="mr-2 h-4 w-4" />
+                  Get Personalized Recommendations
+                </Button>
+                <Button onClick={() => setShowQuestionnaire(false)} variant="outline">
+                  Cancel
+                </Button>
+              </div>
+            </motion.div>
+          </CardContent>
+        )}
+
         {isLoading && (
           <CardContent>
             <div className="flex flex-col items-center justify-center py-12">
               <Loader2 className="mb-4 h-8 w-8 animate-spin text-primary" />
-              <p className="text-sm text-muted-foreground">Analyzing prescription with AI...</p>
+              <p className="text-sm text-muted-foreground">Analyzing your symptoms and prescription...</p>
+              <p className="text-xs text-muted-foreground mt-2">AI is generating personalized recommendations...</p>
             </div>
           </CardContent>
         )}
@@ -140,7 +262,21 @@ export function MedicineSuggestions({ prescriptions, diagnosis }: MedicineSugges
                           <CardHeader className="pb-3">
                             <div className="flex items-start justify-between gap-3">
                               <div className="flex-1">
-                                <CardTitle className="mb-2 text-base">{suggestion.medicine}</CardTitle>
+                                <div className="flex items-center gap-2 mb-2">
+                                  <CardTitle className="text-base">{suggestion.medicine}</CardTitle>
+                                  {suggestion.shouldTake && (
+                                    <Badge 
+                                      variant={
+                                        suggestion.shouldTake.startsWith("YES") ? "default" : 
+                                        suggestion.shouldTake.startsWith("NO") ? "destructive" : 
+                                        "secondary"
+                                      }
+                                      className="text-xs"
+                                    >
+                                      {suggestion.shouldTake.split(" - ")[0]}
+                                    </Badge>
+                                  )}
+                                </div>
                                 <p className="text-sm text-muted-foreground">{suggestion.reason}</p>
                               </div>
                               <div className="flex items-center gap-2">

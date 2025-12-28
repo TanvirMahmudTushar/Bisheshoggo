@@ -1,41 +1,69 @@
-import { redirect } from "next/navigation"
-import { createClient } from "@/lib/supabase/server"
+"use client"
+
+import { useEffect, useState } from "react"
+import { useRouter } from "next/navigation"
+import { useAuth } from "@/lib/api/auth-context"
 import { EmergencyContent } from "@/components/emergency/emergency-content"
+import { profileApi, emergencyApi } from "@/lib/api/client"
 
-export default async function EmergencyPage() {
-  const supabase = await createClient()
+export default function EmergencyPage() {
+  const { user, isLoading } = useAuth()
+  const router = useRouter()
+  const [profile, setProfile] = useState<any>(null)
+  const [patientProfile, setPatientProfile] = useState<any>(null)
+  const [activeEmergencies, setActiveEmergencies] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
+  useEffect(() => {
+    if (!isLoading && !user) {
+      router.push("/auth/login")
+      return
+    }
+
+    if (user) {
+      const fetchData = async () => {
+        try {
+          // Fetch profile
+          const response = await profileApi.getProfile()
+          const profileData = response.profile || response
+          setProfile(profileData)
+          setPatientProfile(response.additionalData || profileData)
+
+          // Fetch active emergencies
+          const emergencyData = await emergencyApi.getAll()
+          const emergencies = emergencyData.data || []
+          const active = emergencies.filter(
+            (e: any) => e.status === "active" || e.status === "responded"
+          )
+          setActiveEmergencies(active)
+        } catch (error) {
+          console.error("Error fetching data:", error)
+        } finally {
+          setLoading(false)
+        }
+      }
+      fetchData()
+    }
+  }, [user, isLoading, router])
+
+  if (isLoading || loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-emerald-500"></div>
+      </div>
+    )
+  }
+
   if (!user) {
-    redirect("/auth/login")
+    return null
   }
-
-  // Fetch user profile
-  const { data: profile } = await supabase.from("profiles").select("*").eq("id", user.id).single()
-
-  // Fetch patient profile for emergency contact info
-  let patientProfile = null
-  if (profile?.role === "patient") {
-    const { data } = await supabase.from("patient_profiles").select("*").eq("id", user.id).single()
-    patientProfile = data
-  }
-
-  // Fetch active emergency SOS
-  const { data: activeEmergencies } = await supabase
-    .from("emergency_sos")
-    .select("*")
-    .eq("patient_id", user.id)
-    .in("status", ["active", "responded"])
-    .order("created_at", { ascending: false })
 
   return (
     <EmergencyContent
       userId={user.id}
       profile={profile}
       patientProfile={patientProfile}
-      activeEmergencies={activeEmergencies || []}
+      activeEmergencies={activeEmergencies}
     />
   )
 }
