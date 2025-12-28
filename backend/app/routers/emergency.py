@@ -93,3 +93,4 @@ async def update_emergency(
     
     return {"success": True}
 
+

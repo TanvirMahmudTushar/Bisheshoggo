@@ -50,3 +50,4 @@ async def get_providers(
     
     return {"data": result}
 
+

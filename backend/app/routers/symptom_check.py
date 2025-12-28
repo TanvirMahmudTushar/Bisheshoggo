@@ -1,6 +1,6 @@
 """
 Bisheshoggo AI - Offline Dr (Symptom Check) Routes
-Powered by Local LLaMA Model for Offline AI Diagnosis
+Powered by Local LLaMA Stack for Offline AI Diagnosis
 """
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
@@ -14,6 +14,64 @@ from ..auth import get_current_user
 from ..config import settings
 
 router = APIRouter(prefix="/symptom-check", tags=["Offline Dr"])
+
+
+def call_local_llama(prompt: str) -> dict:
+    """
+    Call local LLaMA Stack for AI-powered diagnosis
+    Falls back to rule-based system if LLaMA is unavailable
+    """
+    try:
+        from llama_stack_client import LlamaStackClient
+        
+        print("🦙 Attempting to connect to Local LLaMA Stack...")
+        
+        # Connect to local LLaMA Stack (default port 5001)
+        client = LlamaStackClient(
+            base_url="http://localhost:5001",
+        )
+        
+        # Call LLaMA for medical diagnosis
+        response = client.inference.chat_completion(
+            messages=[
+                {
+                    "role": "user",
+                    "content": prompt,
+                }
+            ],
+            model_id="Llama3.2-3B-Instruct",  # Use the model you have installed
+            stream=False,
+        )
+        
+        # Extract the response content
+        content = response.completion_message.content
+        print(f"✅ LLaMA Response received: {content[:100]}...")
+        
+        # Try to parse as JSON
+        try:
+            result = json.loads(content)
+            print("✅ Successfully parsed LLaMA JSON response")
+            return result
+        except json.JSONDecodeError:
+            # If not JSON, extract key information
+            print("⚠️ LLaMA response not JSON, extracting information...")
+            return {
+                "diagnosis": content.split('\n')[0] if content else "General Health Concern",
+                "suggested_conditions": ["Requires Professional Evaluation"],
+                "recommendations": content,
+                "urgency_level": "moderate",
+                "home_remedies": [],
+                "warning_signs": [],
+                "should_see_doctor": True
+            }
+    
+    except ImportError:
+        print("⚠️ llama-stack-client not installed")
+        return None
+    except Exception as e:
+        print(f"⚠️ LLaMA Stack Error: {e}")
+        print("   Falling back to rule-based diagnosis...")
+        return None
 
 
 def analyze_symptoms_locally(symptoms: List[str], severity: str, duration: str, additional_notes: str):
@@ -230,13 +288,60 @@ async def create_symptom_check(
             models.PatientProfile.user_id == current_user.id
         ).first()
         
-        # Local AI Analysis (Offline capable)
-        ai_result = analyze_symptoms_locally(
-            symptoms=symptoms_list,
-            severity=check_data.severity or "moderate",
-            duration=check_data.duration or "",
-            additional_notes=check_data.additional_notes or ""
-        )
+        medical_history = ""
+        if patient_profile:
+            medical_history = f"""
+Blood Group: {patient_profile.blood_group or 'N/A'}
+Gender: {patient_profile.gender or 'N/A'}
+Medical Conditions: {', '.join(patient_profile.medical_conditions or [])}
+Allergies: {', '.join(patient_profile.allergies or [])}
+Current Medications: {', '.join(patient_profile.current_medications or [])}
+"""
+        
+        # Try Local LLaMA Stack first
+        llama_prompt = f"""You are an expert medical AI assistant for rural Bangladesh. Analyze these symptoms and provide a diagnosis.
+
+Patient Information:
+{medical_history}
+
+Current Symptoms: {', '.join(symptoms_list)}
+Severity: {check_data.severity or 'Not specified'}
+Duration: {check_data.duration or 'Not specified'}
+Additional Notes: {check_data.additional_notes or 'None'}
+
+Provide your response in the following JSON format:
+{{
+    "diagnosis": "Primary diagnosis in Bengali and English",
+    "suggested_conditions": ["Condition 1", "Condition 2", "Condition 3"],
+    "recommendations": "Detailed recommendations in Bengali including when to seek medical care",
+    "urgency_level": "low" | "moderate" | "high" | "emergency",
+    "home_remedies": ["Remedy 1 in Bengali", "Remedy 2 in Bengali"],
+    "warning_signs": ["Warning sign 1", "Warning sign 2"],
+    "should_see_doctor": true | false
+}}
+
+Consider:
+- Limited access to healthcare facilities in Bangladesh
+- Common conditions in rural areas
+- Home remedies with local ingredients
+- When immediate medical attention is needed
+- Provide recommendations in Bengali language"""
+
+        print("🦙 Trying Local LLaMA Stack for AI diagnosis...")
+        ai_result = call_local_llama(llama_prompt)
+        
+        # If LLaMA fails, use rule-based system
+        if ai_result is None:
+            print("📋 Using rule-based diagnosis system...")
+            ai_result = analyze_symptoms_locally(
+                symptoms=symptoms_list,
+                severity=check_data.severity or "moderate",
+                duration=check_data.duration or "",
+                additional_notes=check_data.additional_notes or ""
+            )
+            model_used = "Rule-based System"
+        else:
+            model_used = "Local LLaMA Stack"
         
         print(f"✅ Diagnosis: {ai_result['diagnosis']}")
         print(f"🚨 Urgency: {ai_result['urgency_level']}")
@@ -280,7 +385,7 @@ async def create_symptom_check(
             "data": check_data_dict,
             "ai_analysis": ai_result,
             "offline_mode": True,
-            "model": "Offline Dr (Local LLaMA-based)"
+            "model": f"Offline Dr ({model_used})"
         }
     
     except Exception as e:

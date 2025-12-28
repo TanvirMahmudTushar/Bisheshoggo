@@ -130,3 +130,4 @@ async def update_consultation(
     
     return {"success": True}
 
+

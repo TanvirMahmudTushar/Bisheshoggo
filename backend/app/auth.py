@@ -110,3 +110,4 @@ def authenticate_user(db: Session, email: str, password: str) -> Optional[models
         return None
     return user
 
+

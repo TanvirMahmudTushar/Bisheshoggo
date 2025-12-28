@@ -34,3 +34,4 @@ def init_db():
     from . import models  # Import models to register them
     Base.metadata.create_all(bind=engine)
 
+

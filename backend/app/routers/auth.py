@@ -99,3 +99,4 @@ async def logout(current_user: models.User = Depends(get_current_user)):
     """Logout user (client should discard the token)"""
     return {"message": "Successfully logged out"}
 
+

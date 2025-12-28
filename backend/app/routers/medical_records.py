@@ -100,3 +100,4 @@ async def get_medical_record(
     
     return record
 
+

@@ -18,6 +18,14 @@ yarn-error.log*
 
 # env files
 .env*
+.env
+.env.local
+.env.development
+.env.production
+
+# backend env
+backend/.env
+backend/.env.local
 
 # vercel
 .vercel
@@ -26,3 +34,29 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 node_modules
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+backend/app/__pycache__/
+backend/app/routers/__pycache__/
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+backend/bisheshoggo.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
