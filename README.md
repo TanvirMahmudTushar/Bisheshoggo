@@ -1,5 +1,5 @@
 # Bisheshoggo AI
-### Bridging the Healthcare Gap in Bangladesh's Forgotten Corners
+### We will bring treatment to the place where even internet can't reach
 
 **Demo:** https://drive.google.com/file/d/16P5CF8TM7AIr1DTY9YQcPtKL1abSY-ZJ/view?usp=sharing
 
