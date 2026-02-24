@@ -23,8 +23,6 @@ When a mother watches her child burn with fever in the dead of night, when an el
 
 The challenge becomes even more daunting when internet connectivity is a luxury they cannot afford. In these remote areas, a stable internet connection is as rare as finding a doctor. Yet, the need for medical guidance doesn't wait for better infrastructure or stronger signals.
 
-Create a solution to overcome this challenge for the helpless people with limited internet access.
-
 ---
 
 ## Solution Overview
@@ -124,32 +122,6 @@ For Community Health Workers serving these remote areas, we built a special dash
 - Git for version control
 - Environment-based configuration
 
----
-
-## AI Tools Used
-
-Throughout the development of Bisheshoggo AI, we used multiple AI tools to accelerate development, improve code quality, and enhance user experience:
-
-**Gemini** (Google AI)
-- Used for: Researching the problem
-
-**ChatGPT** (OpenAI)
-- Used for: Researching the problem and generating components for UI
-
-**Claude** (Anthropic)
-- Used for: Generating code
-
-**Heygen**
-- Used for: Creating the AI doctor video (doctor.mp4)
-
-**V0** (Vercel)
-- Used for: UI/UX component generation
-
-**Azure OpenAI**
-- Used for: Testing alternative AI models for medical consultation (Couldn't use it as I crossed the monthly limit)
-
-**Cursor** (AI Code Editor)
-- Used for: AI-assisted coding and debugging
 
 ---
 
