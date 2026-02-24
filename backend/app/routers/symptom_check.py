@@ -6,7 +6,6 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from typing import List
 import json
-import subprocess
 import re
 from .. import models, schemas
 from ..database import get_db
@@ -327,21 +326,35 @@ Consider:
 - When immediate medical attention is needed
 - Provide recommendations in Bengali language"""
 
-        print("🦙 Trying Local LLaMA Stack for AI diagnosis...")
-        ai_result = call_local_llama(llama_prompt)
-        
-        # If LLaMA fails, use rule-based system
-        if ai_result is None:
-            print("📋 Using rule-based diagnosis system...")
-            ai_result = analyze_symptoms_locally(
+        print("� Trying MedGemma (Google HAI-DEF) for AI diagnosis...")
+        try:
+            from ..medgemma_service import medgemma_symptom_analysis
+            import asyncio
+            ai_result = await medgemma_symptom_analysis(
                 symptoms=symptoms_list,
                 severity=check_data.severity or "moderate",
                 duration=check_data.duration or "",
                 additional_notes=check_data.additional_notes or ""
             )
-            model_used = "Rule-based System"
-        else:
-            model_used = "Local LLaMA Stack"
+            model_used = f"MedGemma ({ai_result.get('model', 'HAI-DEF')})"
+            print(f"✅ MedGemma analysis complete")
+        except Exception as medgemma_error:
+            print(f"⚠️ MedGemma Error: {medgemma_error}")
+            print("🦙 Trying Local LLaMA Stack for AI diagnosis...")
+            ai_result = call_local_llama(llama_prompt)
+        
+            # If LLaMA fails, use rule-based system
+            if ai_result is None:
+                print("📋 Using rule-based diagnosis system...")
+                ai_result = analyze_symptoms_locally(
+                    symptoms=symptoms_list,
+                    severity=check_data.severity or "moderate",
+                    duration=check_data.duration or "",
+                    additional_notes=check_data.additional_notes or ""
+                )
+                model_used = "Rule-based System"
+            else:
+                model_used = "Local LLaMA Stack"
         
         print(f"✅ Diagnosis: {ai_result['diagnosis']}")
         print(f"🚨 Urgency: {ai_result['urgency_level']}")

@@ -1,7 +1,7 @@
 # Bisheshoggo AI
 ### We will bring treatment to the place where even internet can't reach
 
-**Demo:** https://drive.google.com/file/d/16P5CF8TM7AIr1DTY9YQcPtKL1abSY-ZJ/view?usp=sharing
+**Demo:** https://youtu.be/j3ZpnNNLdA4
 
 ---
 
@@ -9,11 +9,7 @@
 
 **Team Name:** NerdHerd
 
-**Team Leader:** Tanvir Mahmud
-
-**Team Co-Leader:** Fariha Tasnim Punni
-
-**Team Member:** Ankit Roy
+**Team Member:** Tanvir Mahmud
 
 ---
 
@@ -57,9 +53,7 @@ No one should suffer alone in an emergency. Our volunteer network connects patie
 
 ![Offline Doctor 3](public/od3.png)
 
-This is our answer to the internet connectivity problem. The Offline Doctor is an AI-powered symptom checker that works completely without internet, using local AI models that run on your device. Tell it your symptoms in Bengali, and it will analyze them using advanced medical algorithms, provide a diagnosis, suggest home remedies with ingredients available in rural Bangladesh, and tell you when to seek immediate medical attention. It's like having a doctor in your pocket—one that doesn't need Wi-Fi to care about you.
-
-I used Llama here for offline support but unfortuntely, there is a bug which I couldn't fix due to shortage of time. 
+This is our answer to the internet connectivity problem. The Offline Doctor is an AI-powered symptom checker that works completely without internet, using MedGemma-4B-IT from Google's Health AI Developer Foundations (HAI-DEF) running locally on your device with 4-bit quantization. Tell it your symptoms in Bengali, and it will analyze them using MedGemma's specialized medical reasoning, provide a diagnosis, suggest home remedies with ingredients available in rural Bangladesh, and tell you when to seek immediate medical attention. It's like having a doctor in your pocket—one that doesn't need Wi-Fi to care about you.
 ### iv. Scan Prescription
 
 ![Scan Prescription 1](public/prep1.png)
@@ -118,9 +112,11 @@ For Community Health Workers serving these remote areas, we built a special dash
 - Uvicorn for ASGI server
 
 **AI & Machine Learning:**
-- Local LLaMA Stack (Llama 3.2-3B-Instruct) for offline AI diagnosis
-- Groq API (llama-3.3-70b-versatile) for online AI features
-- Custom rule-based medical diagnosis engine
+- MedGemma-4B-IT (Google HAI-DEF) with 4-bit NF4 quantization for local GPU medical inference
+- Gemma 3 27B API fallback via Google GenAI for cloud-based medical reasoning
+- Groq API (LLaMA 3.3 70B) as tertiary fallback
+- Custom rule-based triage engine (client-side, fully offline)
+- HuggingFace Transformers, bitsandbytes, PyTorch CUDA
 - Natural Language Processing for Bengali language support
 
 **Deployment & Development:**
@@ -163,11 +159,11 @@ This is where Bisheshoggo AI truly stands apart. We designed every feature with 
 
 **Complete Offline Functionality:**
 
-The Offline Doctor is the heart of our offline strategy. Using Local LLaMA Stack (Llama 3.2-3B-Instruct), we run a sophisticated AI model directly on the user's device. When you describe your symptoms, the AI processes everything locally—no internet needed, no data sent to the cloud, no waiting for connectivity. It analyzes your symptoms using advanced medical algorithms, compares them against thousands of conditions, and provides diagnosis and recommendations—all in Bengali, all offline, all private.
+The Offline Doctor is the heart of our offline strategy. Using MedGemma-4B-IT from Google's Health AI Developer Foundations, we run a specialized medical AI model directly on the user's device with 4-bit NF4 quantization via bitsandbytes. When you describe your symptoms, MedGemma processes everything locally on the GPU—no internet needed, no data sent to the cloud, no waiting for connectivity. It analyzes your symptoms using clinical-grade medical reasoning, compares them against thousands of conditions, and provides diagnosis and recommendations—all in Bengali, all offline, all private.
 
-**Intelligent Fallback Systems:**
+**Intelligent Three-Tier Fallback System:**
 
-When the Local LLaMA model is not available, our custom rule-based medical diagnosis engine takes over. We've programmed it with deep medical knowledge about the most common conditions in rural Bangladesh—from fever and respiratory infections to gastrointestinal issues, from skin conditions to emergencies. It knows the local remedies, the available medicines, and when immediate medical attention is critical. This dual-AI system ensures that help is always available, whether you have internet, a powerful device, or neither.
+When the local MedGemma model is not available (insufficient GPU/RAM), the platform automatically falls back to Gemma 3 27B via Google's GenAI API—staying within the Gemma ecosystem for consistent medical quality. If that also fails, Groq's LLaMA 3.3 70B acts as a final safety net. And even if all cloud services are down, a client-side TypeScript triage engine handles emergency detection and risk assessment directly in the browser with zero network calls. This three-tier system ensures that help is always available, whether you have internet, a powerful device, or neither.
 
 **Progressive Web App (PWA):**
 
@@ -198,7 +194,8 @@ This is healthcare that meets people where they are—not where we wish they wer
 **Prerequisites:**
 - Node.js 18+ and pnpm installed
 - Python 3.12+ installed
-- (Optional) LLaMA Stack for advanced AI features
+- NVIDIA GPU with 6+ GB VRAM (optional, for local MedGemma inference)
+- HuggingFace account with access to MedGemma (optional)
 
 **Frontend Setup:**
 
@@ -217,12 +214,12 @@ This is healthcare that meets people where they are—not where we wish they wer
 5. Backend will run on http://localhost:8000
 6. API documentation available at http://localhost:8000/docs
 
-**Optional - LLaMA Stack for Offline Doctor:**
+**MedGemma Local Inference (Optional - requires NVIDIA GPU):**
 
-1. Install LLaMA Stack: `pip install llama-stack`
-2. Run LLaMA Stack: `llama stack run Llama3.2-3B-Instruct`
-3. The Offline Doctor will automatically use the local AI model
-4. If not running, it falls back to the rule-based diagnosis system
+1. The MedGemma-4B-IT model (4-bit quantized) will be automatically downloaded on first run
+2. Requires ~3 GB VRAM and 3.5+ GB free RAM
+3. The system auto-detects GPU/RAM availability and loads the model if resources permit
+4. If local inference is unavailable, it automatically falls back to Gemma 3 27B API → Groq API → client-side triage engine
 
 The application is now ready to bring healthcare to those who need it most.
 
@@ -242,7 +239,7 @@ In the quiet villages of Bangladesh's hill tracts, where the nearest hospital is
 
 **Language Barrier Removed:** All features work in Bengali with voice support, meaning even those who cannot read can access healthcare guidance through voice commands and responses.
 
-**Offline Revolution:** The Offline Doctor proves that AI-powered healthcare doesn't require constant internet connectivity. It's bringing cutting-edge medical AI to areas where even basic 2G networks are unreliable.
+**Offline Revolution:** The Offline Doctor, powered by MedGemma from Google's Health AI Developer Foundations, proves that AI-powered healthcare doesn't require constant internet connectivity. It's bringing cutting-edge medical AI to areas where even basic 2G networks are unreliable.
 
 **Digital Health Records:** For the first time, people in remote areas have digital health records that travel with them, ensuring continuity of care regardless of which healthcare provider they visit.
 

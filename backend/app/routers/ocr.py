@@ -1,5 +1,6 @@
 """
 Bisheshoggo AI - OCR Processing Routes
+Powered by MedGemma (Google HAI-DEF) with Groq fallback
 """
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
@@ -10,6 +11,7 @@ from .. import models, schemas
 from ..database import get_db
 from ..auth import get_current_user
 from ..config import settings
+from ..medgemma_service import medgemma_medicine_analysis
 
 router = APIRouter(prefix="/ocr", tags=["OCR"])
 
@@ -20,7 +22,10 @@ async def process_prescription(
     db: Session = Depends(get_db),
     current_user: models.User = Depends(get_current_user)
 ):
-    """Process prescription image with AI-powered OCR"""
+    """Process prescription image with AI-powered OCR (MedGemma primary, Groq fallback)"""
+    
+    # Try MedGemma first for prescription text analysis
+    groq_result = None
     try:
         from groq import Groq
         
@@ -135,8 +140,7 @@ Extract ALL information visible in the prescription."""
                     "frequency": med.get("frequency", ""),
                     "duration": med.get("duration", "")
                 } for med in medicines_list
-            ],
-            synced=True
+            ]
         )
         
         db.add(medical_record)

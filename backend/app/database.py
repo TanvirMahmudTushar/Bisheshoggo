@@ -2,8 +2,7 @@
 Bisheshoggo AI - Database Configuration with SQLAlchemy + SQLite
 """
 from sqlalchemy import create_engine
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy.orm import declarative_base, sessionmaker
 from .config import settings
 
 # Create SQLite engine

@@ -30,7 +30,6 @@ export default function SymptomCheckerPage() {
         symptoms,
         severity,
         duration,
-        additional_notes: additionalNotes,
       });
 
       setResult(response);

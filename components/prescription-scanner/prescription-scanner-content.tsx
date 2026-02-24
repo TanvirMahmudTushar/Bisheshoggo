@@ -246,9 +246,14 @@ export function PrescriptionScannerContent() {
     if (!extractedData) return
 
     try {
-      const response = await fetch("/api/medical-records", {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api'
+      const token = typeof window !== 'undefined' ? localStorage.getItem('bisheshoggo_token') : null
+      const response = await fetch(`${apiUrl}/medical-records`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          ...(token ? { "Authorization": `Bearer ${token}` } : {}),
+        },
         body: JSON.stringify({
           record_type: "prescription",
           title: `Prescription - ${extractedData.date || new Date().toLocaleDateString()}`,
@@ -389,7 +394,7 @@ export function PrescriptionScannerContent() {
                     <CardTitle className="text-base">Scanned Image</CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <div className="relative aspect-[3/4] overflow-hidden rounded-lg border border-border/40">
+                    <div className="relative aspect-3/4 overflow-hidden rounded-lg border border-border/40">
                       <Image
                         src={image || "/placeholder.svg"}
                         alt="Scanned prescription"

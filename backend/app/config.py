@@ -21,6 +21,8 @@ class Settings(BaseSettings):
     
     # AI Settings
     GROQ_API_KEY: str = ""
+    GOOGLE_API_KEY: str = ""
+    HF_TOKEN: str = ""  # HuggingFace token for MedGemma model download
     
     # CORS
     FRONTEND_URL: str = "http://localhost:3000"

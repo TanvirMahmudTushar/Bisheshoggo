@@ -11,7 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Checkbox } from "@/components/ui/checkbox"
 import { Stethoscope, AlertCircle, ArrowLeft, Check, Loader2, WifiOff, AlertTriangle, Info } from "lucide-react"
 import Link from "next/link"
-import { supabase } from "@/lib/supabase/client"
+import { symptomCheckApi } from "@/lib/api/client"
 import { toast } from "sonner"
 import { motion, AnimatePresence } from "framer-motion"
 import type { SymptomCheck } from "@/lib/types"
@@ -154,26 +154,18 @@ export function SymptomCheckerContent({ userId, symptomHistory }: SymptomChecker
 
       // Try to save to database (will fail gracefully if offline)
       if (!isOffline) {
-        if (!supabase) {
-          throw new Error("Supabase client not available")
-        }
-
-        const { error } = await supabase.from("symptom_checks").insert({
-          user_id: userId,
-          symptoms: selectedSymptoms,
-          severity,
-          duration: duration || null,
-          additional_notes: additionalNotes || null,
-          suggested_conditions: analysis.conditions,
-          recommendations: analysis.recommendations,
-          synced: true,
-        })
-
-        if (error) {
-          console.error("[ ] Error saving symptom check:", error)
-          // Still show results even if save fails
-        } else {
+        try {
+          await symptomCheckApi.create({
+            symptoms: selectedSymptoms.join(", "),
+            severity,
+            duration: duration || undefined,
+            diagnosis: analysis.conditions.map((c: any) => c.name || c).join(", "),
+            recommendations: Array.isArray(analysis.recommendations) ? analysis.recommendations.join(" | ") : String(analysis.recommendations || ""),
+          })
           toast.success("Symptom check saved successfully")
+        } catch (saveError) {
+          console.error("[ ] Error saving symptom check:", saveError)
+          // Still show results even if save fails
         }
       } else {
         // Queue for offline sync
@@ -228,8 +220,8 @@ export function SymptomCheckerContent({ userId, symptomHistory }: SymptomChecker
           </div>
         </div>
         {step !== "history" && (
-          <Button variant="outline" onClick={() => setStep(step === "history" ? "input" : "history")}>
-            {step === "history" ? "New Check" : "View History"}
+          <Button variant="outline" onClick={() => setStep("history")}>
+            View History
           </Button>
         )}
       </div>
@@ -369,7 +361,7 @@ export function SymptomCheckerContent({ userId, symptomHistory }: SymptomChecker
                   />
                 </div>
 
-                <Button onClick={handleSubmit} disabled={isLoading || selectedSymptoms.length === 0} className="w-full bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700">
+                <Button onClick={handleSubmit} disabled={isLoading || selectedSymptoms.length === 0} className="w-full bg-linear-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700">
                   {isLoading ? (
                     <>
                       <Loader2 className="w-4 h-4 mr-2 animate-spin" />
@@ -388,7 +380,7 @@ export function SymptomCheckerContent({ userId, symptomHistory }: SymptomChecker
             {/* Disclaimer */}
             <Card className="border-blue-500/50 bg-blue-500/10">
               <CardContent className="flex gap-3 py-4">
-                <Info className="w-5 h-5 text-blue-500 flex-shrink-0 mt-0.5" />
+                <Info className="w-5 h-5 text-blue-500 shrink-0 mt-0.5" />
                 <div className="text-sm">
                   <p className="font-medium mb-1">Medical Disclaimer</p>
                   <p className="text-muted-foreground">
@@ -456,7 +448,7 @@ export function SymptomCheckerContent({ userId, symptomHistory }: SymptomChecker
                   <div className="space-y-2">
                     {results.conditions.map((condition, index) => (
                       <div key={index} className="flex items-start gap-2 p-3 rounded-lg bg-muted">
-                        <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0 mt-0.5">
+                        <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center shrink-0 mt-0.5">
                           <span className="text-xs font-medium">{index + 1}</span>
                         </div>
                         <p className="text-sm font-medium">{condition}</p>
@@ -497,7 +489,7 @@ export function SymptomCheckerContent({ userId, symptomHistory }: SymptomChecker
             {results.severity === "high" && (
               <Card className="border-red-500/50 bg-red-500/10">
                 <CardContent className="flex gap-3 py-4">
-                  <AlertCircle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
+                  <AlertCircle className="w-5 h-5 text-red-500 shrink-0 mt-0.5" />
                   <div className="text-sm">
                     <p className="font-medium mb-1 text-red-500">Emergency Notice</p>
                     <p>

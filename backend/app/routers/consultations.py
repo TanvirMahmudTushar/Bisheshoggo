@@ -92,7 +92,7 @@ async def get_consultation(
 @router.put("/{consultation_id}")
 async def update_consultation(
     consultation_id: str,
-    status: schemas.ConsultationStatus = None,
+    new_status: schemas.ConsultationStatus = None,
     diagnosis: str = None,
     prescription: str = None,
     notes: str = None,
@@ -117,8 +117,8 @@ async def update_consultation(
             detail="Not authorized to update this consultation"
         )
     
-    if status:
-        consultation.status = status
+    if new_status:
+        consultation.status = new_status
     if diagnosis:
         consultation.diagnosis = diagnosis
     if prescription:

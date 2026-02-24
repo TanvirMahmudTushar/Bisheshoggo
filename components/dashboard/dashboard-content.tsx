@@ -54,6 +54,9 @@ export function DashboardContent({
     try {
       // Clear token from localStorage
       localStorage.removeItem('bisheshoggo_token')
+      // Clear any auth state
+      const { setAuthToken } = await import('@/lib/api/client')
+      setAuthToken(null)
       // Redirect to login
       router.push("/auth/login")
     } catch (error) {

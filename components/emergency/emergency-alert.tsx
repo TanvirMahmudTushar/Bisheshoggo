@@ -83,15 +83,20 @@ export function EmergencyAlert({ language }: EmergencyAlertProps) {
     offlineStorage.set(`emergency_${emergencyLog.id}`, emergencyLog)
 
     try {
-      const response = await fetch("/api/emergency", {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api'
+      const token = typeof window !== 'undefined' ? localStorage.getItem('bisheshoggo_token') : null
+      const response = await fetch(`${apiUrl}/emergency`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          ...(token ? { "Authorization": `Bearer ${token}` } : {}),
+        },
         body: JSON.stringify({
           location: data.location,
           latitude: data.coordinates?.lat,
           longitude: data.coordinates?.lng,
           emergency_type: data.emergency,
-          description: data.symptoms.join(", "),
+          description: (data.symptoms ?? []).join(", "),
           status: "pending",
         }),
       })
@@ -110,7 +115,7 @@ export function EmergencyAlert({ language }: EmergencyAlertProps) {
           latitude: data.coordinates?.lat,
           longitude: data.coordinates?.lng,
           emergency_type: data.emergency,
-          description: data.symptoms.join(", "),
+          description: (data.symptoms || []).join(", "),
           status: "pending",
         },
       })
